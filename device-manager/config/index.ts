@@ -57,6 +57,13 @@ export const config = {
     port: envNumber("PORT", 3001),
     host: env("HOST", "localhost"),
   },
+
+  /**
+   * Image Configuration
+   */
+  images: {
+    domain: env("IMAGE_DOMAIN", env("DOMAIN", "http://localhost:3001")),
+  },
   /**
    * CORS Configuration
    */
@@ -106,6 +113,8 @@ export const config = {
       examinationForms: env("DATABASE_COLLECTION_EXAMINATION_FORMS", "examination_forms"),
       reRecordForms: env("DATABASE_COLLECTION_RERECORD_FORMS", "re_record_forms"),
       responses: env("DATABASE_COLLECTION_RESPONSES", "responses"),
+      userActivityEvents: env("DATABASE_COLLECTION_USER_ACTIVITY_EVENTS", "user_activity_events"),
+      userSessions: env("DATABASE_COLLECTION_USER_SESSIONS", "user_sessions"),
     },
   },
 
@@ -138,10 +147,12 @@ export const config = {
     apiConcert: "/api/concert",
     apiUser: "/api/user",
     apiForm: "/api/forms",
+    apiUserActivity: "/api/user-activity",
     examinationForm: '/examination-forms',
     apiExaminationForm: "/api/examination-forms",
     reRecordForm: "/re-record-forms",
     apiReRecordForm: "/api/re-record-forms",
+    apiImages: "/api/images",
   },
   api: {
     userIdHeader: env("API_USER_ID_HEADER", "x-user-id"),

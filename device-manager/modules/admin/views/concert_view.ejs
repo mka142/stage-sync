@@ -139,6 +139,56 @@
             <a href="<%= url.admin %>/" class="ui button"><i class="arrow left icon"></i>Powrót</a>
           </div>
         </div>
+        <!-- Image management section -->
+        <div class="column">
+          <div class="ui segment">
+            <h3 class="ui header">Zarządzanie obrazami</h3>
+            
+            <!-- Simple Image Upload -->
+            <div class="ui segment">
+              <h4 class="ui header">
+                <i class="upload icon"></i>
+                <div class="content">
+                  Przesyłanie obrazów
+                  <div class="sub header">Prześlij obraz i otrzymaj UUID do użycia w treści JSON</div>
+                </div>
+              </h4>
+              
+              <form action="/api/images/upload" method="POST" enctype="multipart/form-data" class="ui form" id="image-upload-form">
+                <div class="field">
+                  <div class="ui action input">
+                    <input type="file" name="image" accept="image/*" required style="display: none;" id="image-file-input">
+                    <input type="text" placeholder="Wybierz plik obrazu..." readonly id="image-filename-display">
+                    <button type="button" class="ui icon button" onclick="document.getElementById('image-file-input').click();">
+                      <i class="folder open outline icon"></i>
+                    </button>
+                    <button type="submit" class="ui primary button">Upload</button>
+                  </div>
+                </div>
+              </form>
+              
+              <div id="upload-result" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Usage instructions -->
+            <div class="ui info message">
+              <div class="header">Instrukcje użycia</div>
+              <p>Po przesłaniu obrazu otrzymasz UUID. Użyj go w treści JSON:</p>
+              <div class="ui code">&lt;image uuid="WKLEJ-TUTAJ-UUID"/&gt;</div>
+              <p><strong>Kontrola rozmiaru:</strong></p>
+              <div class="ui code">&lt;image uuid="UUID" width="20%"/&gt;</div>
+              <div class="ui code">&lt;image uuid="UUID" width="50"/&gt;</div>
+              <p>Tag zostanie automatycznie przekonwertowany na właściwy link do obrazu z odpowiednim rozmiarem.</p>
+            </div>
+            
+            <!-- Images list -->
+            <div class="ui segment">
+              <h4 class="ui header">Wszystkie przesłane obrazy</h4>
+              <div id="images-list-content">Ładowanie listy obrazów...</div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Devices section -->
         <div class="column">
           <div class="ui segment">
@@ -228,6 +278,87 @@
         html += `</tbody></table>`;
         document.getElementById("devices-table-container").innerHTML = html;
       }
+
+      // Image management functions
+      
+      // File input handling
+      document.getElementById('image-file-input').addEventListener('change', function(e) {
+        const filename = e.target.files[0]?.name || '';
+        document.getElementById('image-filename-display').value = filename;
+      });
+      
+      // Upload form handling
+      document.getElementById('image-upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('/api/images/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            loadImagesList(); // Refresh the images list
+            document.getElementById('image-file-input').value = '';
+            document.getElementById('image-filename-display').value = '';
+            
+            const resultDiv = document.getElementById('upload-result');
+            resultDiv.innerHTML = `<div class="ui success message">
+              <div class="header">Obraz przesłany pomyślnie!</div>
+              <p><strong>UUID:</strong> <code>${data.image.uuid}</code></p>
+              <p>Użyj tego UUID w treści JSON: <code>&lt;image uuid="${data.image.uuid}"/&gt;</code></p>
+            </div>`;
+          } else {
+            const resultDiv = document.getElementById('upload-result');
+            resultDiv.innerHTML = `<div class="ui error message">Błąd: ${data.error || 'Nieznany błąd'}</div>`;
+          }
+        })
+        .catch(err => {
+          console.error('Upload error:', err);
+          const resultDiv = document.getElementById('upload-result');
+          resultDiv.innerHTML = '<div class="ui error message">Błąd podczas przesyłania obrazu</div>';
+        });
+      });
+      
+      function loadImagesList() {
+        fetch('/api/images/list')
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              const imagesListContent = document.getElementById('images-list-content');
+              if (data.images.length === 0) {
+                imagesListContent.innerHTML = '<p>Brak przesłanych obrazów.</p>';
+              } else {
+                let html = '<div class="ui small cards">';
+                data.images.forEach(img => {
+                  html += `<div class="card">
+                    <div class="image">
+                      <img src="/api/images/${img.uuid}" style="height: 100px; object-fit: cover;">
+                    </div>
+                    <div class="content">
+                      <div class="header" style="font-size: 0.8em;">${img.originalName}</div>
+                      <div class="meta">UUID: ${img.uuid}</div>
+                      <div class="description" style="font-size: 0.8em;">
+                        <code>&lt;image uuid="${img.uuid}"/&gt;</code>
+                      </div>
+                    </div>
+                  </div>`;
+                });
+                html += '</div>';
+                imagesListContent.innerHTML = html;
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Image list error:', err);
+            document.getElementById('images-list-content').innerHTML = 'Błąd podczas ładowania listy obrazów.';
+          });
+      }
+      
+      // Initialize image management on page load
+      loadImagesList();
+
       function fetchDevices() {
         fetch(`/api/user/concert/${concertId}`)
           .then((res) => res.json())

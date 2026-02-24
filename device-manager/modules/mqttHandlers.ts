@@ -1,4 +1,5 @@
 import { UserService } from "./user";
+import { userActivityService } from "./user-activity";
 
 import type { MqttBrokerHandlers } from "@/modules/connections/broker";
 

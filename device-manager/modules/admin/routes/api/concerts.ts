@@ -1,12 +1,12 @@
 import { Router } from "express";
 
+import { config } from "@/config";
 import { UserService } from "@/modules/user/services/userService";
+import { ImageParser, readImageMetadata } from "@/modules/images";
 
 import { ConcertService, EventService } from "../../services";
 
-
 import type { Request, Response } from "express";
-
 
 const router = Router();
 
@@ -38,6 +38,16 @@ router.get("/currentEvent", async (req: Request, res: Response) => {
     return;
   }
 
+  // Process payload content through ImageParser to convert <image uuid="..."/> tags
+  const processedEvent = { ...event };
+  if (event.payload && typeof event.payload === 'object') {
+    const imageParser = new ImageParser({ domain: config.images.domain });
+    // Load image metadata so parser can resolve UUIDs
+    const imageMetadata = readImageMetadata();
+    imageParser.setImageMetadata(imageMetadata);
+    processedEvent.payload = processPayloadContent(event.payload, imageParser);
+  }
+
   // check for clientId query param
   try {
     const clientId = req.query.clientId as string | undefined;
@@ -51,8 +61,29 @@ router.get("/currentEvent", async (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: event,
+    data: processedEvent,
   });
 });
+
+// Helper function to recursively process payload content
+function processPayloadContent(obj: any, imageParser: ImageParser): any {
+  if (typeof obj === 'string') {
+    // Process string content through ImageParser
+    const result = imageParser.parseContent(obj);
+    return result.content;
+  } else if (Array.isArray(obj)) {
+    // Process array elements
+    return obj.map(item => processPayloadContent(item, imageParser));
+  } else if (obj && typeof obj === 'object') {
+    // Process object properties
+    const processed: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      processed[key] = processPayloadContent(value, imageParser);
+    }
+    return processed;
+  }
+  // Return as-is for other types (numbers, booleans, null, etc.)
+  return obj;
+}
 
 export default router;

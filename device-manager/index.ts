@@ -10,10 +10,12 @@ import { initializeDb, disconnectDb } from "./modules/db";
 import { examinationFormRoutes } from "./modules/examination-form";
 import examinationFormViews from "./modules/examination-form/routes/views/examination-form";
 import { formRoutes } from "./modules/form";
+import { imageApiRoutes } from "./modules/images";
 import { mqttHandlers } from "./modules/mqttHandlers";
 import { adminRoutes as reRecordFormAdminRoutes, publicRoutes as reRecordFormPublicRoutes, apiRoutes as reRecordFormApiRoutes } from "./modules/re-record-form/routes";
 import { createServer, shutdownServer } from "./modules/server";
 import { userRoutes } from "./modules/user";
+import { userActivityRoutes } from "./modules/user-activity";
 import { setupMiddleware, setupErrorHandlers, basicAuth, setupTemplateLocals } from "./shared/middleware";
 
 const app = express();
@@ -40,8 +42,12 @@ app.use(config.url.reRecordForm, basicAuth, reRecordFormAdminRoutes);
 // User routes: /api/users/*
 app.use(config.url.apiConcert, adminApiRoutes);
 app.use(config.url.apiUser, userRoutes);
+// Image routes: /api/images/*
+app.use(config.url.apiImages, imageApiRoutes);
 // Form routes: /api/forms/*
 app.use(config.url.apiForm, formRoutes);
+// User activity routes: /api/user-activity/*
+app.use(config.url.apiUserActivity, userActivityRoutes);
 // Examination form routes: /api/examination-forms/*
 app.use(config.url.apiExaminationForm, examinationFormRoutes);
 // Re-record form API routes: /api/re-record-forms/*

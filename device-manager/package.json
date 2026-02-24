@@ -33,6 +33,7 @@
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
+    "@types/uuid": "^11.0.0",
     "@types/ws": "^8.18.1",
     "aedes": "^0.51.3",
     "aedes-persistence-redis": "^11.2.2",
@@ -45,6 +46,7 @@
     "mqtt": "^5.14.1",
     "multer": "^2.0.2",
     "music-metadata": "^11.10.3",
+    "uuid": "^13.0.0",
     "websocket-stream": "^5.5.2",
     "ws": "^8.18.3"
   }

@@ -29,7 +29,9 @@ import type { Db } from 'mongodb';
  * ```
  */
 export async function initializeDb(config: MongoDbConfig): Promise<Db> {
-  return await connectToDb(config);
+  const database = await connectToDb(config);
+  
+  return database;
 }
 
 /**

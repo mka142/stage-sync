@@ -117,6 +117,20 @@ export function createMqttBroker(httpServer: HttpServer, mqttPort: number = 1883
   aedesInstance.on("publish", (packet, client) => {
     if (client) {
       console.log(`📤 Message from ${client.id} to topic ${packet.topic}`);
+      
+      // Handle user activity messages
+      if (packet.topic.startsWith('user-activity')) {
+        try {
+          // Delegate to user activity service for processing
+          import('../user-activity').then(({ userActivityService }) => {
+            userActivityService.processActivityEvent(packet.topic, packet.payload.toString());
+          }).catch(error => {
+            console.error('Failed to process user activity event:', error);
+          });
+        } catch (error) {
+          console.error('Error handling user activity message:', error);
+        }
+      }
     }
   });
 
