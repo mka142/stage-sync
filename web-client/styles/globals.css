@@ -1,78 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: hsl(0 0% 98%);
-  --orange: #fd8211;
-  --glow: #42b2c2;
-  --foreground: hsl(240 10% 3.9%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(240 5.9% 10%);
-  --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(240 4.8% 95.9%);
-  --secondary-foreground: hsl(240 5.9% 10%);
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(240 4.8% 95.9%);
-  --accent-foreground: hsl(240 5.9% 10%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
-  --ring: hsl(240 10% 3.9%);
-  --chart-1: hsl(12 76% 61%);
-  --chart-2: hsl(173 58% 39%);
-  --chart-3: hsl(197 37% 24%);
-  --chart-4: hsl(43 74% 66%);
-  --chart-5: hsl(27 87% 67%);
+  /* Concert theme colors */
+  --background: #1A1612; /* ink */
+  --foreground: #F5F0E8; /* cream */
+  --card: #1A1612;
+  --card-foreground: #F5F0E8;
+  --popover: #1A1612;
+  --popover-foreground: #F5F0E8;
+  --primary: #C4933F; /* gold */
+  --primary-dark: #A67A2E; /* darker gold */
+  --primary-light: #E8C97A; /* lighter gold */
+  --primary-foreground: #1A1612;
+  --secondary: #3D3530; /* ink-soft */
+  --secondary-foreground: #F5F0E8;
+  --muted: #8A7E74; /* muted text */
+  --muted-foreground: #F5F0E8;
+  --accent: #E8C97A; /* gold-light */
+  --accent-foreground: #1A1612;
+  --destructive: #8B3A2A; /* rust */
+  --destructive-foreground: #F5F0E8;
+  --border: rgba(196,147,63,0.25); /* gold border */
+  --input: #3D3530;
+  --ring: #C4933F;
+  --chart-1: #C4933F;
+  --chart-2: #E8C97A;
+  --chart-3: #8B3A2A;
+  --chart-4: #8A7E74;
+  --chart-5: #3D3530;
   --radius: 0.6rem;
-  --sidebar-background: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar-background: #0F0C0A;
+  --sidebar-foreground: #F5F0E8;
+  --sidebar-primary: #C4933F;
+  --sidebar-primary-foreground: #1A1612;
+  --sidebar-accent: #3D3530;
+  --sidebar-accent-foreground: #F5F0E8;
+  --sidebar-border: rgba(196,147,63,0.25);
+  --sidebar-ring: #C4933F;
+  
+  /* Custom concert variables */
+  --cream: #F5F0E8;
+  --warm-white: #FAF7F2;
+  --ink: #1A1612;
+  --ink-soft: #3D3530;
+  --gold: #C4933F;
+  --gold-light: #E8C97A;
+  --rust: #8B3A2A;
+  --concert-muted: #8A7E74;
+  --border-strong: rgba(196,147,63,0.6);
+  
+  --orange: #C4933F; /* map orange to gold */
+  --glow: #E8C97A; /* map glow to gold-light */
 }
 
 .dark {
-  --background: hsl(240 10% 3.9%);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(240 10% 3.9%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(240 10% 3.9%);
-  --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(0 0% 98%);
-  --primary-foreground: hsl(240 5.9% 10%);
-  --secondary: hsl(240 3.7% 15.9%);
-  --secondary-foreground: hsl(0 0% 98%);
-  --muted: hsl(240 3.7% 15.9%);
-  --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
-  --accent-foreground: hsl(0 0% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 3.7% 15.9%);
-  --input: hsl(240 3.7% 15.9%);
-  --ring: hsl(240 4.9% 83.9%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
-  --sidebar-background: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  /* Dark theme uses same concert colors */
+  --background: #1A1612;
+  --foreground: #F5F0E8;
+  --card: #1A1612;
+  --card-foreground: #F5F0E8;
+  --popover: #1A1612;
+  --popover-foreground: #F5F0E8;
+  --primary: #C4933F;
+  --primary-dark: #A67A2E;
+  --primary-light: #E8C97A;
+  --primary-foreground: #1A1612;
+  --secondary: #3D3530;
+  --secondary-foreground: #F5F0E8;
+  --muted: #8A7E74;
+  --muted-foreground: #F5F0E8;
+  --accent: #E8C97A;
+  --accent-foreground: #1A1612;
+  --destructive: #8B3A2A;
+  --destructive-foreground: #F5F0E8;
+  --border: rgba(196,147,63,0.25);
+  --input: #3D3530;
+  --ring: #C4933F;
+  --chart-1: #C4933F;
+  --chart-2: #E8C97A;
+  --chart-3: #8B3A2A;
+  --chart-4: #8A7E74;
+  --chart-5: #3D3530;
+  --sidebar-background: #0F0C0A;
+  --sidebar-foreground: #F5F0E8;
+  --sidebar-primary: #C4933F;
+  --sidebar-primary-foreground: #1A1612;
+  --sidebar-accent: #3D3530;
+  --sidebar-accent-foreground: #F5F0E8;
+  --sidebar-border: rgba(196,147,63,0.25);
+  --sidebar-ring: #C4933F;
 }
 
 @theme inline {
@@ -85,6 +107,8 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -114,6 +138,17 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar-background);
+  
+  /* Concert theme Tailwind classes */
+  --color-cream: var(--cream);
+  --color-warm-white: var(--warm-white);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-rust: var(--rust);
+  --color-concert-muted: var(--concert-muted);
+  --color-border-strong: var(--border-strong);
 }
 
 @layer base {
@@ -123,5 +158,23 @@
   body {
     @apply bg-background text-foreground;
     height: 100dvh;
+  }
+  
+  /* Custom font families */
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .font-body {
+    font-family: 'Cormorant Garamond', serif;
+  }
+  
+  /* Custom color classes */
+  .text-primary-dark {
+    color: rgb(var(--color-primary-dark));
+  }
+  
+  .text-primary-light {
+    color: rgb(var(--color-primary-light));
   }
 }

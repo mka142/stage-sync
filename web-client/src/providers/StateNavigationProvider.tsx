@@ -1,7 +1,10 @@
 import { EVENT_TYPES, EventType } from "@/config";
 import React, { useState, useEffect, useMemo } from "react";
 
-export type Payload = Record<string, any>;
+export type Payload = Record<string, any> & {
+  backgroundImageUrl?: string;
+  currentSlideIndex?: number;
+};
 export type StateHash = string | null;
 
 export interface AppState {

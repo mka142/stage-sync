@@ -1,130 +1,144 @@
-import FadeInWrapper from "@/components/FadeInWrapper";
-import FadeOutWrapper from "@/components/FadeOutWrapper";
+import React from "react";
 import { StateNavigationComponentProps } from "@/providers/StateNavigationProvider";
 import { useBackgroundColor } from "@/hooks/useBackgroundColor";
+import { useUserActivity } from "@/providers/UserActivityProvider";
 import config from "@/config";
-import SponsorsCarousel from "@/components/SponsorsCarousel";
-import FeedbackForm, { FEEDBACK_FORM_ID } from "@/components/form/FeedbackForm";
-import ConcertForm from "@/components/ConcertForm";
-import { useEffect, useState } from "react";
-import { useUserResponseExist } from "@/components/form/useUserResponseExist";
-import Button from "@/components/Button";
+import FadeOutWrapper from "@/components/FadeOutWrapper";
 
 export default function EndOfConcertPage({
   shouldTransitionBegin,
   setTransitionFinished,
 }: StateNavigationComponentProps) {
-  const [pageType, setPageType] = useState("OpenFormPage");
-  const [formCompleted, setFormCompleted] = useState(false);
-  const { exist } = useUserResponseExist(FEEDBACK_FORM_ID);
+  const { sendEvent } = useUserActivity();
 
   useBackgroundColor(
     config.constants.pagesBackgroundColor.END_OF_CONCERT,
     2000
   );
 
-  useEffect(() => {
-    if (exist) {
-      setFormCompleted(true);
-    }
-  }, [exist]);
+  React.useEffect(() => {
+    sendEvent('page_change', {
+      toPage: 'END_OF_CONCERT',
+      url: window.location.href
+    });
+  }, [sendEvent]);
 
-  useEffect(() => {
-    if (formCompleted) {
-      setPageType("GoodbyePage");
-    }
-  }, [formCompleted]);
-
-  useEffect(() => {
-    if (shouldTransitionBegin) {
-      setTransitionFinished();
-    }
-  }, [shouldTransitionBegin, setTransitionFinished]);
-
-  if (pageType === "OpenFormPage") {
-    return <FormInfoPage setPageType={setPageType} />;
-  }
-
-  if (pageType === "ConcertFormPage") {
-    return (
-      <ConcertFormPage
-        onFormSubmitted={() => setFormCompleted(true)}
-        onCancel={() => setPageType("GoodbyePage")}
-      />
-    );
-  }
-  if (pageType === "GoodbyePage") {
-    return <GoodbyePage />;
-  }
-}
-
-function GoodbyePage() {
   return (
-    <FadeInWrapper className="w-full h-full flex items-center justify-center ">
-      <div className="w-full text-center space-y-8">
-        <div className="p-8">
-          <h1 className="text-5xl font-bold text-white mb-8">Dziękujemy!</h1>
+    <FadeOutWrapper
+      className="h-full flex flex-col items-center justify-center relative overflow-hidden"
+      shouldTransitionBegin={shouldTransitionBegin}
+      setTransitionFinished={setTransitionFinished}
+      style={{ 
+        color: '#F5F0E8', 
+        fontFamily: "'Cormorant Garamond', serif" 
+      }}
+    >
+      {/* Background with elegant farewell atmosphere */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Radial gradient as defined in config */}
+        <div className="absolute inset-0 bg-gradient-radial from-amber-600/8 via-transparent to-transparent opacity-70" />
+        
+        {/* Decorative musical elements */}
+        <div 
+          className="absolute top-1/4 right-1/4 text-5xl text-amber-600/10 transform rotate-12 animate-pulse"
+          style={{ 
+            fontFamily: "'Playfair Display', serif",
+            fontStyle: "italic"
+          }}
+        >
+          ♪
+        </div>
+        <div 
+          className="absolute bottom-1/4 left-1/4 text-4xl text-amber-600/10 transform -rotate-12 animate-pulse delay-75"
+          style={{ 
+            fontFamily: "'Playfair Display', serif",
+            fontStyle: "italic"
+          }}
+        >
+          ♫
+        </div>
+        <div 
+          className="absolute top-1/2 left-1/5 text-3xl text-amber-600/10 animate-pulse delay-150"
+          style={{ 
+            fontFamily: "'Playfair Display', serif",
+            fontStyle: "italic"
+          }}
+        >
+          ♪
+        </div>
+      </div>
 
-          <div className="space-y-6 text-md text-white/90 leading-relaxed">
-            <p>
-              Proszę czekać na dalszą część koncertu
-            </p>
+      {/* Main farewell content */}
+      <div className="relative z-10 text-center space-y-10 px-8 max-w-lg">
+        {/* Header */}
+        <div 
+          className="text-xs tracking-[0.4em] uppercase text-amber-500"
+          style={{ fontFamily: "'DM Mono', monospace" }}
+        >
+          Koniec Koncertu
+        </div>
+
+        {/* Main farewell */}
+        <div className="space-y-6">
+          <h1 
+            className="text-[52px] font-black leading-tight text-stone-100"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Dziękujemy
+          </h1>
+          
+          <div 
+            className="text-xl italic text-amber-200 leading-relaxed"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+          >
+            Za wspólne przeżycie tego wyjątkowego wieczoru muzycznego
           </div>
         </div>
-        <SponsorsCarousel />
-      </div>
-    </FadeInWrapper>
-  );
-}
 
-function ConcertFormPage({
-  onFormSubmitted,
-  onCancel,
-}: {
-  onFormSubmitted: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="page-screen">
-      <FadeInWrapper className="relative w-full h-full box-border touch-manipulation overflow-y-auto">
-        <ConcertForm
-          onFormSubmitted={onFormSubmitted}
-          onCancel={onCancel}
-          formComponent={FeedbackForm}
-          formId={FEEDBACK_FORM_ID}
-        />
-      </FadeInWrapper>
-    </div>
-  );
-}
+        {/* Elegant divider */}
+        <div className="flex items-center justify-center space-x-4 py-6">
+          <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-60" />
+          <div className="w-3 h-3 bg-amber-500 rounded-full opacity-70" />
+          <div className="w-16 h-px bg-gradient-to-l from-transparent via-amber-500 to-transparent opacity-60" />
+        </div>
 
-function FormInfoPage({
-  setPageType,
-}: {
-  setPageType: (type: string) => void;
-}) {
-  return (
-    <FadeInWrapper className="w-full h-full flex items-center justify-center p-8">
-      <div className="max-w-2xl text-center space-y-8">
-        <h1 className="text-4xl font-bold text-white mb-6">
-          Podziel się swoimi wrażeniami
-        </h1>
-
-        <p className="text-xl text-white/90 leading-relaxed">
-          Twoja opinia jest dla nas bardzo ważna. Wypełnienie krótkiej ankiety
-          pomoże nam lepiej zrozumieć Twoje doświadczenia z tego koncertu
-          badawczego.
-        </p>
-
-        <div className="pt-6">
-          <Button
-            variant="primary"
-            onClick={() => setPageType("ConcertFormPage")}
+        {/* Appreciation message */}
+        <div className="space-y-4">
+          <div 
+            className="text-base text-stone-300 leading-relaxed"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            Otwórz formularz
-          </Button>
+            Mamy nadzieję, że muzyka poruszyła Twoje serce i zostawi trwałe wspomnienia
+          </div>
+          
+          <div 
+            className="text-sm text-stone-400"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+          >
+            Do zobaczenia na kolejnych koncertach
+          </div>
+        </div>
+
+        {/* Final ornamental touch */}
+        <div className="pt-4">
+          <div 
+            className="text-[9px] tracking-[0.5em] uppercase text-amber-400/60"
+            style={{ fontFamily: "'DM Mono', monospace" }}
+          >
+            ◦ ◦ ◦ Fin ◦ ◦ ◦
+          </div>
         </div>
       </div>
-    </FadeInWrapper>
+
+      {/* Bottom signature */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        <div 
+          className="text-[8px] tracking-[0.3em] uppercase text-stone-500"
+          style={{ fontFamily: "'DM Mono', monospace" }}
+        >
+          Filharmonia Wrocławska
+        </div>
+      </div>
+    </FadeOutWrapper>
   );
 }

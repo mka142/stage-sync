@@ -6,7 +6,7 @@
   "main": "src/index.tsx",
   "module": "src/index.tsx",
   "scripts": {
-    "dev": "bun --hot src/index.tsx",
+    "dev": "bun --hot --env-file .env.development src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "bun run build.ts",
     "check-types": "tsc --noEmit"
@@ -16,6 +16,7 @@
     "bun-plugin-tailwind": "^0.0.14",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.0",
+    "isomorphic-dompurify": "^3.0.0",
     "mqtt": "^5.14.1",
     "react": "^19",
     "react-confetti": "^6.4.0",

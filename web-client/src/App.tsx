@@ -8,21 +8,18 @@ import {
   WithStateNavigation,
 } from "./providers/StateNavigationProvider";
 import BeforeConcert from "./pages/BeforeConcertPage";
-import AppGuidePage from "./pages/AppGuidePage";
-import SliderDemoPage from "./pages/SliderDemoPage";
 import ConcertStartPage from "./pages/ConcertStartPage";
-import TensionMeasurementPage from "./pages/TensionMeasurementPage";
 import PieceAnnouncementPage from "./pages/PieceAnnouncementPage";
 import OvationPage from "./pages/OvationPage";
-
+import RepertoireDisplayPage from "./pages/RepertoireDisplayPage";
+import CurrentPiecePage from "./pages/CurrentPiecePage";
+import PieceListeningPage from "./pages/PieceListeningPage";
 import EndOfConcertPage from "./pages/EndOfConcertPage";
 import { LoadingWithBackgroundTransition } from "./components/Loading";
 
 import { useAppState } from "./hooks/useAppState";
 import { EventType } from "./config";
 import config from "./config";
-import SponsorsPage from "./pages/SponsorsPage";
-import PieceListeningPage from "./pages/PieceListeningPage";
 
 function getColor(color: string | { [key: string]: string } | undefined) {
   if (typeof color === "string") {
@@ -86,14 +83,6 @@ export function App() {
         component={BeforeConcert}
       />
       <StateNavigationPage<EventType>
-        pageState="APP_GUIDE"
-        component={AppGuidePage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="SLIDER_DEMO"
-        component={SliderDemoPage}
-      />
-      <StateNavigationPage<EventType>
         pageState="CONCERT_START"
         component={ConcertStartPage}
       />
@@ -102,8 +91,16 @@ export function App() {
         component={PieceAnnouncementPage}
       />
       <StateNavigationPage<EventType>
-        pageState="TENSION_MEASUREMENT"
-        component={TensionMeasurementPage}
+        pageState="REPERTOIRE_DISPLAY"
+        component={RepertoireDisplayPage}
+      />
+      <StateNavigationPage<EventType>
+        pageState="CURRENT_PIECE"
+        component={CurrentPiecePage}
+      />
+      <StateNavigationPage<EventType>
+        pageState="PIECE_LISTENING"
+        component={PieceListeningPage}
       />
       <StateNavigationPage<EventType>
         pageState="OVATION"
@@ -112,14 +109,6 @@ export function App() {
       <StateNavigationPage<EventType>
         pageState="END_OF_CONCERT"
         component={EndOfConcertPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="SPONSORS"
-        component={SponsorsPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="PIECE_LISTENING"
-        component={PieceListeningPage}
       />
     </WithStateNavigation>
   );

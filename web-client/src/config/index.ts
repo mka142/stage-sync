@@ -58,16 +58,15 @@ export const STORAGE_KEYS = {
 
 export const EVENT_TYPES = [
   "BEFORE_CONCERT",
-  "APP_GUIDE",
-  "SLIDER_DEMO",
   "CONCERT_START",
   "PIECE_ANNOUNCEMENT",
-  "TENSION_MEASUREMENT",
+  "REPERTOIRE_DISPLAY",
+  "CURRENT_PIECE", 
+  "PIECE_TRANSITION",
+  "PIECE_LISTENING",
   "OVATION",
-  "FEEDBACK_FORM",
   "END_OF_CONCERT",
   "SPONSORS",
-  "PIECE_LISTENING",
 ] as const;
 export const DEVICE_TYPES = ["Web", "M5Stack"] as const;
 
@@ -82,21 +81,22 @@ export const PAGES_BACKGROUND_COLOR: Record<
       gradient: string;
     }
 > = {
-  BEFORE_CONCERT: "var(--glow)",
-  APP_GUIDE: "#000000",
-  TENSION_MEASUREMENT: "#000000",
-  SLIDER_DEMO: "#000000",
-  CONCERT_START: "#000000",
-  PIECE_ANNOUNCEMENT: "#000000",
-  OVATION: "#000000",
-  FEEDBACK_FORM: "#000000",
-  // gradient blck top to glow bottom
-  END_OF_CONCERT: {
-    color: "#000000",
-    gradient: "linear-gradient(to bottom, #000,#000,#000, var(--glow),#000)",
+  BEFORE_CONCERT: "#1A1612", // ink
+  CONCERT_START: "#1A1612",
+  PIECE_ANNOUNCEMENT: "#1A1612",
+  REPERTOIRE_DISPLAY: "#1A1612", 
+  CURRENT_PIECE: "#1A1612",
+  PIECE_TRANSITION: {
+    color: "#1A1612",
+    gradient: "linear-gradient(45deg, #1A1612, #2A2520, #1A1612)",
   },
-  SPONSORS: "var(--glow)",
-  PIECE_LISTENING: "#000000",
+  PIECE_LISTENING: "#0A0806", // darker for slide overlay
+  OVATION: "#1A1612",
+  END_OF_CONCERT: {
+    color: "#1A1612",
+    gradient: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(196,147,63,0.08) 0%, #1A1612 70%)",
+  },
+  SPONSORS: "#1A1612",
 };
 
 // ============================================================================
@@ -130,6 +130,12 @@ export const config = {
     concert: {
       currentEvent: `${API_BASE_URL}/api/concert/currentEvent`,
     },
+    
+    /** Image API endpoints */
+    url: {
+      images: `${API_BASE_URL}/api/images`,
+    },
+    
     form: {
       submitBatch: `${API_BASE_URL}/api/forms/batch`,
     },

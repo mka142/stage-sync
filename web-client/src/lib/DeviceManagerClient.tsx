@@ -43,6 +43,9 @@ interface DeviceManagerContextValue<T = any> {
   /** Clear event history */
   clearHistory: () => void;
 
+  /** Publish a message to a topic */
+  publish: (topic: string, payload: string) => Promise<void>;
+
   /** Last error that occurred */
   error: Error | null;
 }
@@ -283,6 +286,23 @@ export function DeviceManagerProvider<T = any>({
   }, []);
 
   /**
+   * Publish a message to a topic
+   */
+  const publish = useCallback(async (topic: string, payload: string) => {
+    if (!isConnectedRef.current) {
+      throw new Error("Cannot publish: Not connected to device manager");
+    }
+
+    try {
+      await mqttClient.publish(topic, payload);
+      console.log(`📤 Published message to topic: ${topic}`);
+    } catch (err) {
+      console.error(`❌ Failed to publish to topic "${topic}":`, err);
+      throw err instanceof Error ? err : new Error(`Failed to publish to ${topic}`);
+    }
+  }, []);
+
+  /**
    * Auto-connect on mount if config provided
    */
   useEffect(() => {
@@ -306,6 +326,7 @@ export function DeviceManagerProvider<T = any>({
     disconnect,
     subscribe,
     unsubscribe,
+    publish,
     clearHistory,
     error,
   };

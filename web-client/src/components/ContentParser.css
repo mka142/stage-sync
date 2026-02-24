@@ -1,0 +1,136 @@
+/* ContentParser Component Styles */
+.content-parser {
+  line-height: var(--content-line-height, 1.75);
+}
+
+.content-parser p {
+  margin-bottom: var(--content-margin-bottom, 0.75rem);
+}
+
+.content-parser br {
+  line-height: 1.5;
+}
+
+.content-parser strong,
+.content-parser b {
+  font-weight: 600;
+  color: rgb(var(--color-primary));
+}
+
+.content-parser em,
+.content-parser i {
+  font-style: italic;
+  color: rgb(var(--color-accent));
+}
+
+/* Headings */
+.content-parser h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  color: rgb(var(--color-foreground));
+}
+
+.content-parser h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.875rem;
+  margin-top: 1.25rem;
+  color: rgb(var(--color-foreground));
+}
+
+.content-parser h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  color: rgb(var(--color-foreground));
+}
+
+.content-parser h4 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.625rem;
+  margin-top: 0.875rem;
+  color: rgb(var(--color-foreground));
+}
+
+.content-parser h5 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+  color: rgb(var(--color-foreground));
+}
+
+.content-parser h6 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+  color: rgb(var(--color-muted));
+}
+
+/* Images */
+.content-parser img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+/* Ensure inline styles on images are NOT overridden */
+.content-parser img[style*="width"] {
+  /* Use !important to ensure inline styles take precedence */
+  max-width: 100% !important; /* Prevent overflow but allow custom widths */
+}
+
+/* Make sure all inline styles on images are respected */
+.content-parser img[style] {
+  /* Don't override any inline styles, just ensure they stay within bounds */
+  max-width: 100% !important;
+}
+
+.content-parser a {
+  color: rgb(var(--color-primary));
+  text-decoration: underline;
+}
+
+.content-parser a:hover {
+  opacity: 0.8;
+}
+
+/* Handle missing images gracefully */
+.content-parser .missing-image {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgb(var(--color-muted) / 0.1);
+  border: 1px dashed rgb(var(--color-muted));
+  border-radius: 4px;
+  color: rgb(var(--color-muted));
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Responsive images */
+@media (max-width: 768px) {
+  .content-parser img {
+    max-width: 100%;
+    margin: 0.75rem 0;
+  }
+  
+  .content-parser h1 {
+    font-size: 1.75rem;
+  }
+  
+  .content-parser h2 {
+    font-size: 1.5rem;
+  }
+  
+  .content-parser h3 {
+    font-size: 1.25rem;
+  }
+}
