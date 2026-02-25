@@ -32,6 +32,7 @@ export default function RepertoireDisplayPage({
 
   React.useEffect(() => {
     sendEvent("page_change", {
+      fromPage: "SYSTEM",
       toPage: "REPERTOIRE_DISPLAY",
       url: window.location.href,
       metadata: { internalTransition: false },
@@ -66,8 +67,8 @@ export default function RepertoireDisplayPage({
 
   const handlePieceClick = (piece: ProgramPiece) => {
     sendEvent("program_piece_clicked", {
+      fromPage: "REPERTOIRE_DISPLAY",
       metadata: {
-        fromPage: "REPERTOIRE_DISPLAY",
         internalTransition: true,
         pieceId: piece.pieceId,
         pieceTitle: piece.pieceTitle,

@@ -208,6 +208,7 @@ export default function PieceListeningPage({
 
   React.useEffect(() => {
     sendEvent("page_change", {
+      fromPage: "SYSTEM",
       toPage: "PIECE_LISTENING",
       url: window.location.href,
       metadata: {

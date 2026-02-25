@@ -238,6 +238,7 @@ export default function BeforeConcertPage({
   // Track page view for analytics
   React.useEffect(() => {
     sendEvent("page_change", {
+      fromPage: "SYSTEM",
       toPage: "BEFORE_CONCERT",
       url: window.location.href,
       metadata: { internalTransition: false },

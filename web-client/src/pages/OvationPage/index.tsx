@@ -16,6 +16,7 @@ export default function OvationPage({
 
   React.useEffect(() => {
     sendEvent('page_change', {
+      fromPage: 'SYSTEM',
       toPage: 'OVATION',
       url: window.location.href
     });

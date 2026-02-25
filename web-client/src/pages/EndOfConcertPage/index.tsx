@@ -18,6 +18,7 @@ export default function EndOfConcertPage({
 
   React.useEffect(() => {
     sendEvent('page_change', {
+      fromPage: 'SYSTEM',
       toPage: 'END_OF_CONCERT',
       url: window.location.href
     });

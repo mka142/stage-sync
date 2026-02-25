@@ -16,6 +16,7 @@ export default function ConcertStartPage({
 
   React.useEffect(() => {
     sendEvent('page_change', {
+      fromPage: 'SYSTEM',
       toPage: 'CONCERT_START',
       url: window.location.href
     });

@@ -40,6 +40,14 @@ export function UserActivityProvider({
   const focusState = useRef<boolean>(true);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const INACTIVITY_TIMEOUT = 30000; // 30 seconds
+
+  // Helper function to determine current page context
+  const getCurrentPageContext = useCallback(() => {
+    const path = window.location.pathname;
+    if (path.includes('/concert') || path.includes('/piece')) return 'CONCERT_SESSION';
+    if (path.includes('/program')) return 'PROGRAM_VIEW';
+    return 'SYSTEM';
+  }, []);
   
   const generateEventId = useCallback(() => {
     return `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -115,6 +123,7 @@ export function UserActivityProvider({
       visibilityState.current = isVisible;
       
       sendEvent('visibility_change', {
+        fromPage: getCurrentPageContext(),
         isVisible,
         isFocused: focusState.current
       });
@@ -135,6 +144,7 @@ export function UserActivityProvider({
     const handleFocus = () => {
       focusState.current = true;
       sendEvent('focus_change', {
+        fromPage: getCurrentPageContext(),
         isFocused: true,
         isVisible: visibilityState.current
       });
@@ -143,6 +153,7 @@ export function UserActivityProvider({
     const handleBlur = () => {
       focusState.current = false;
       sendEvent('focus_change', {
+        fromPage: getCurrentPageContext(),
         isFocused: false,
         isVisible: visibilityState.current
       });
@@ -165,6 +176,7 @@ export function UserActivityProvider({
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       sendEvent('touch_interaction', {
+        fromPage: getCurrentPageContext(),
         touchType: 'start',
         touchCount: e.touches.length,
         coordinates: e.touches.length > 0 ? {
@@ -176,6 +188,7 @@ export function UserActivityProvider({
 
     const handleTouchEnd = (e: TouchEvent) => {
       sendEvent('touch_interaction', {
+        fromPage: getCurrentPageContext(),
         touchType: 'end',
         touchCount: e.touches.length,
         coordinates: e.changedTouches.length > 0 ? {
@@ -211,6 +224,7 @@ export function UserActivityProvider({
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         sendEvent('scroll_interaction', {
+          fromPage: getCurrentPageContext(),
           scrollDirection,
           scrollPosition: { x: currentScrollX, y: currentScrollY }
         });
@@ -244,19 +258,24 @@ export function UserActivityProvider({
     };
     
     setCurrentSession(session);
-    sendEvent('session_start');
+    sendEvent('session_start', {
+      fromPage: getCurrentPageContext()
+    });
   }, [userId, sessionId, isTracking, sendEvent]);
 
   const stopTracking = useCallback(() => {
     if (!isTracking) return;
 
     const sessionDuration = Date.now() - sessionStartTime.current;
-    sendEvent('session_end', { sessionDuration });
+    sendEvent('session_end', {
+      fromPage: getCurrentPageContext(),
+      sessionDuration
+    });
     immediateFlush();
     
     setIsTracking(false);
     setCurrentSession(prev => prev ? { ...prev, endTime: Date.now(), isActive: false } : null);
-  }, [isTracking, sendEvent, immediateFlush]);
+  }, [isTracking, sendEvent, immediateFlush, getCurrentPageContext]);
 
   // Auto-start tracking when component mounts
   useEffect(() => {
@@ -282,7 +301,10 @@ export function UserActivityProvider({
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       console.log('📊 Before unload - flushing events immediately');
       const sessionDuration = Date.now() - sessionStartTime.current;
-      sendEvent('session_end', { sessionDuration });
+      sendEvent('session_end', {
+        fromPage: getCurrentPageContext(),
+        sessionDuration
+      });
       immediateFlush();
       
       // Don't prevent the default as we want to capture the leaving
@@ -293,7 +315,10 @@ export function UserActivityProvider({
       // pagehide is more reliable on mobile devices
       console.log('📊 Page hide - flushing events immediately');
       const sessionDuration = Date.now() - sessionStartTime.current;
-      sendEvent('session_end', { sessionDuration });
+      sendEvent('session_end', {
+        fromPage: getCurrentPageContext(),
+        sessionDuration
+      });
       immediateFlush();
     };
 
