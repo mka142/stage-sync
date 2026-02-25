@@ -7,39 +7,43 @@ export interface UserActivityEvent {
   data: ActivityEventData;
 }
 
-export type UserActivityType = 
-  | 'session_start'
-  | 'session_end'
-  | 'focus_change'
-  | 'visibility_change'
-  | 'touch_interaction'
-  | 'scroll_interaction'
-  | 'page_change';
+export type UserActivityType =
+  | "session_start"
+  | "session_end"
+  | "focus_change"
+  | "visibility_change"
+  | "touch_interaction"
+  | "scroll_interaction"
+  | "page_change"
+  | "auto_navigate_to_current_piece"
+  | "program_piece_clicked"
+  | "back_to_program";
 
 export interface ActivityEventData {
   // Common fields
   url?: string;
   userAgent?: string;
-  
+
   // Focus/visibility specific
   isVisible?: boolean;
   isFocused?: boolean;
-  
+
   // Touch interaction specific
-  touchType?: 'start' | 'move' | 'end';
+  touchType?: "start" | "move" | "end";
   touchCount?: number;
   coordinates?: { x: number; y: number };
-  
+
   // Scroll interaction specific
-  scrollDirection?: 'up' | 'down' | 'left' | 'right';
+  scrollDirection?: "up" | "down" | "left" | "right";
   scrollPosition?: { x: number; y: number };
-  
+
   // Session specific
   sessionDuration?: number;
-  
+
   // Page change specific
   fromPage?: string;
   toPage?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface UserSession {

@@ -6,139 +6,24 @@ import config from "@/config";
 import { useBackgroundColor } from "@/hooks/useBackgroundColor";
 import { useUserActivity } from "@/providers/UserActivityProvider";
 import ProgramView from "@/components/ConcertProgram/ProgramView";
-import type ConcertProgram from "@/components/ConcertProgram/ProgramView";
+import type { ConcertProgram } from "@/components/ConcertProgram/ProgramView";
 import { ProgramPiece } from "@/components/ConcertProgram/ProgramItem";
 import PieceDetailView from "@/components/ConcertProgram/PieceDetailView";
 
-// Mock data - in real app this would come from payload/API
-const MOCK_CONCERT_DATA: ConcertProgram = {
-  title: "Wieczór Muzyki Kameralnej",
-  subtitle: "Filharmonia Wrocławska",
-  date: "25 lutego 2025",
-  pieces: [
-    {
-      pieceId: "kwartet-smyczkowy-julia-labowska-1",
-      piecePosition: 1,
-      composerName: "Julia Łabowska",
-      pieceTitle: "Kwartet smyczkowy",
-      durationSeconds: 360,
-      compositionYear: 2023,
-      descriptions: [
-        {
-          position: 1,
-          title: "o utworze",
-          content:
-            "Burza jest utworem, który powstał jako jedno z wielu zadań na zajęcia z kontrapunktu. Składa się on z dwóch części– Burza i Tęcza.",
-        },
-        {
-          position: 2,
-          title: "o kompozytorce",
-          content:
-            "Julia Łabowska jest młodą kompozytorką, która od najmłodszych lat była zafascynowana muzyką.",
-        },
-        {
-          position: 3,
-          title: "o wykonawcach",
-          content:
-            "Zuzanna Horna, Natalia Burnagiel, Julia Łabowska i Marysia Kokoszka to utalentowane młode muzyczki.",
-        },
-      ],
-      performers: [
-        { name: "Zuzanna Horna", instrument: "Skrzypce I" },
-        { name: "Natalia Burnagiel", instrument: "Skrzypce II" },
-        { name: "Julia Łabowska", instrument: "Altówka" },
-        { name: "Marysia Kokoszka", instrument: "Wiolonczela" },
-      ],
-      status: "done",
-    },
-    {
-      pieceId: "kwartet-smyczkowy-2",
-      piecePosition: 2,
-      composerName: "Maurice Ravel",
-      pieceTitle: "Kwartet smyczkowy F-dur",
-      durationSeconds: 1680,
-      compositionYear: 1903,
-      descriptions: [
-        {
-          position: 1,
-          title: "o utworze",
-          content:
-            "Jedyny kwartet smyczkowy Ravela, pełen impresjonistycznych kolorów",
-        },
-        {
-          position: 2,
-          title: "o kompozytorze",
-          content:
-            "Maurice Ravel był francuskim kompozytorem impresjonistycznym, znanym z wyrafinowanej orkiestracji.",
-        },
-        {
-          position: 3,
-          title: "analiza",
-          content:
-            "Utwór składa się z czterech części, każda o unikalnym charakterze i nastroju.",
-        },
-      ],
-      performers: [
-        { name: "Performer 1", instrument: "Skrzypce I" },
-        { name: "Performer 2", instrument: "Skrzypce II" },
-        { name: "Performer 3", instrument: "Altówka" },
-        { name: "Performer 4", instrument: "Wiolonczela" },
-      ],
-      status: "current",
-    },
-    {
-      pieceId: "kwartet-smyczkowy-3",
-      piecePosition: 3,
-      composerName: "Piotr Czajkowski",
-      pieceTitle: "Kwartet smyczkowy nr 1 D-dur",
-      durationSeconds: 1920,
-      compositionYear: 1871,
-      descriptions: [
-        {
-          position: 1,
-          title: "o utworze",
-          content: "Młodzieńcze dzieło pełne romantycznej ekspresji",
-        },
-        {
-          position: 2,
-          title: "o kompozytorze",
-          content:
-            "Piotr Iljicz Czajkowski był rosyjskim kompozytorem epoki romantyzmu, twórcą niezapomnianych baletów.",
-        },
-        {
-          position: 3,
-          title: "historia",
-          content:
-            "Kwartet powstał w okresie młodości kompozytora i odzwierciedla jego wczesny styl.",
-        },
-        {
-          position: 4,
-          title: "technika",
-          content:
-            "Utwór wykorzystuje tradycyjne formy kwartetowe w innovacyjny sposób.",
-        },
-      ],
-      performers: [
-        { name: "Performer 1", instrument: "Skrzypce I" },
-        { name: "Performer 2", instrument: "Skrzypce II" },
-        { name: "Performer 3", instrument: "Altówka" },
-        { name: "Performer 4", instrument: "Wiolonczela" },
-      ],
-      status: "upcoming",
-    },
-  ],
-};
+interface RepertoireDisplayPageProps extends StateNavigationComponentProps {
+  payload: ConcertProgram; // Expecting the concert program data to be passed in payload
+}
 
 export default function RepertoireDisplayPage({
   shouldTransitionBegin,
   setTransitionFinished,
   payload,
-}: StateNavigationComponentProps) {
+}: RepertoireDisplayPageProps) {
   const { sendEvent, events } = useUserActivity();
   const [selectedPiece, setSelectedPiece] = useState<{
     piece: ProgramPiece | null;
-    internalTransition: boolean;
-  }>({ piece: null, internalTransition: null });
+    internalTransition: boolean | null;
+  }>({ piece: null, internalTransition: null }); // Keep null as initial state
 
   useBackgroundColor(
     config.constants.pagesBackgroundColor.REPERTOIRE_DISPLAY,
@@ -149,7 +34,7 @@ export default function RepertoireDisplayPage({
     sendEvent("page_change", {
       toPage: "REPERTOIRE_DISPLAY",
       url: window.location.href,
-      internalTransition: false,
+      metadata: { internalTransition: false },
     });
   }, [sendEvent]);
 
@@ -165,21 +50,27 @@ export default function RepertoireDisplayPage({
       if (currentPiece) {
         setSelectedPiece({ piece: currentPiece, internalTransition: false });
         sendEvent("auto_navigate_to_current_piece", {
-          pieceId: currentPiece.pieceId,
-          pieceTitle: currentPiece.pieceTitle,
-          composer: currentPiece.composerName,
-          internalTransition: false,
+          metadata: {
+            internalTransition: false,
+            pieceId: currentPiece.pieceId,
+            pieceTitle: currentPiece.pieceTitle,
+            composer: currentPiece.composerName,
+          },
         });
+      } else {
+        setSelectedPiece({ piece: null, internalTransition: false });
       }
     }
   }, [concertProgram, sendEvent]);
 
   const handlePieceClick = (piece: ProgramPiece) => {
     sendEvent("program_piece_clicked", {
-      pieceId: piece.pieceId,
-      pieceTitle: piece.pieceTitle,
-      composer: piece.composerName,
-      internalTransition: true,
+      metadata: {
+        internalTransition: true,
+        pieceId: piece.pieceId,
+        pieceTitle: piece.pieceTitle,
+        composer: piece.composerName,
+      },
     });
     setSelectedPiece({ piece, internalTransition: true });
   };
@@ -187,8 +78,10 @@ export default function RepertoireDisplayPage({
   const handleBackToProgram = () => {
     setSelectedPiece({ piece: null, internalTransition: true });
     sendEvent("back_to_program", {
-      fromPiece: selectedPiece?.piece?.pieceId,
-      internalTransition: true,
+      metadata: {
+        internalTransition: true,
+        fromPiece: selectedPiece?.piece?.pieceId,
+      },
     });
   };
 
@@ -202,9 +95,6 @@ export default function RepertoireDisplayPage({
       className="h-full flex flex-col overflow-auto relative bg-background text-foreground"
       shouldTransitionBegin={shouldTransitionBegin}
       setTransitionFinished={setTransitionFinished}
-      style={{
-        fontFamily: "'Cormorant Garamond', serif",
-      }}
     >
       {/* Background ornaments */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
