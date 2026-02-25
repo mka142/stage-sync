@@ -315,6 +315,12 @@ export function UserActivityProvider({
     };
   }, [sendEvent, immediateFlush]);
 
+  // Auto-start tracking when provider is mounted
+  useEffect(() => {
+    console.log('📊 UserActivityProvider mounted, starting tracking for userId:', userId);
+    startTracking();
+  }, [startTracking]);
+
   const value: UserActivityContextType = {
     sessionId,
     events,

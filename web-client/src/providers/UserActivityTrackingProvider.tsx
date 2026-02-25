@@ -1,6 +1,9 @@
 import React from "react";
-import { useUser } from "../providers/UserProvider";
+import { useAppState } from "../hooks/useAppState";
 import { UserActivityProvider } from "../providers/UserActivityProvider";
+import { useUserActivitySync } from "../hooks/useUserActivitySync";
+import UserActivitySync from "@/components/UserActivitySync";
+import UserActivityWrapper from "@/components/UserActivityWrapper";
 
 interface UserActivityTrackingProviderProps {
   children: React.ReactNode;
@@ -12,18 +15,22 @@ interface UserActivityTrackingProviderProps {
 export function UserActivityTrackingProvider({
   children,
 }: UserActivityTrackingProviderProps) {
-  const { userId } = useUser();
+  const { userId } = useAppState();
 
   if (!userId) {
     console.warn(
-      "UserActivityTrackingProvider: No user ID found, user activity will not be tracked.",
+      "UserActivityTrackingProvider: No userId available from app state. User activity tracking will be disabled.",
     );
-    return <>{children}</>;
+    return null;
   }
 
   return (
-    <UserActivityProvider userId={userId} enableBatching={true} batchSize={10}>
-      {children}
+    <UserActivityProvider
+      userId={userId}
+      enableBatching={false} // Send immediately via HTTP
+      batchSize={1}
+    >
+      <UserActivityWrapper>{children}</UserActivityWrapper>
     </UserActivityProvider>
   );
 }
