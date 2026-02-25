@@ -316,7 +316,7 @@ export default function EndOfConcertPage({
           className="text-[8px] tracking-[0.3em] uppercase text-stone-500"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
-          Filharmonia Wrocławska
+          Akademia Muzyczna im. Karola Lipińskiego we Wrocławiu
         </div>
       </motion.div>
 
