@@ -40,7 +40,7 @@ function GrainCanvas() {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const resize = () => {
@@ -48,10 +48,10 @@ function GrainCanvas() {
       canvas.height = canvas.offsetHeight;
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener("resize", resize);
 
-    function lerp(a: number, b: number, t: number) { 
-      return a + (b - a) * t; 
+    function lerp(a: number, b: number, t: number) {
+      return a + (b - a) * t;
     }
 
     function render() {
@@ -78,7 +78,7 @@ function GrainCanvas() {
       s.grainSize = lerp(s.grainSize, s.targetSize, 0.03);
 
       // Move blobs
-      s.blobs.forEach(b => {
+      s.blobs.forEach((b) => {
         b.x += b.vx + (Math.random() - 0.5) * 0.0003;
         b.y += b.vy + (Math.random() - 0.5) * 0.0003;
         // Wrap
@@ -101,7 +101,7 @@ function GrainCanvas() {
           const nx = mx / MAP;
           const ny = my / MAP;
           let w = 0.5; // base weight
-          s.blobs.forEach(b => {
+          s.blobs.forEach((b) => {
             const dx = nx - b.x;
             const dy = ny - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -128,13 +128,17 @@ function GrainCanvas() {
         const w = weight[my * MAP + mx];
 
         // Brightness: mostly white/light, occasionally darker speck
-        const bright = Math.random() < 0.85
-          ? 180 + Math.floor(Math.random() * 75)   // light grain
-          : 20 + Math.floor(Math.random() * 80);    // dark speck
+        const bright =
+          Math.random() < 0.85
+            ? 180 + Math.floor(Math.random() * 75) // light grain
+            : 20 + Math.floor(Math.random() * 80); // dark speck
 
         // Alpha: modulated by spatial weight × global intensity × random spike
         const spike = Math.random() < 0.03 ? 2.5 : 1.0; // rare bright flashes
-        const alpha = Math.min(1, w * frameInt * (0.4 + Math.random() * 0.6) * spike);
+        const alpha = Math.min(
+          1,
+          w * frameInt * (0.4 + Math.random() * 0.6) * spike,
+        );
 
         ctx.fillStyle = `rgba(${bright},${bright},${bright},${alpha})`;
 
@@ -157,13 +161,13 @@ function GrainCanvas() {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
-      window.removeEventListener('resize', resize);
+      window.removeEventListener("resize", resize);
     };
   }, []);
 
   return (
-    <canvas 
-      ref={canvasRef} 
+    <canvas
+      ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay"
       style={{ zIndex: 2 }}
     />
@@ -176,7 +180,10 @@ interface ImageAnimationProps {
   className?: string;
 }
 
-const ImageAnimation: React.FC<ImageAnimationProps> = ({ type, className = "" }) => {
+const ImageAnimation: React.FC<ImageAnimationProps> = ({
+  type,
+  className = "",
+}) => {
   if (type !== "grainAnimation") return null;
 
   return <GrainCanvas />;
@@ -188,7 +195,11 @@ export default function PieceListeningPage({
   payload,
 }: StateNavigationComponentProps) {
   const { sendEvent } = useUserActivity();
-  const [content, setContent] = useState<ContentData | null>("asdfasdfasdfds");
+
+  // Extract piece info from payload
+  const pieceTitle = payload?.pieceTitle || "";
+  const composer = payload?.composer || "";
+  const pieceId = payload?.pieceId || "";
 
   useBackgroundColor(
     config.constants.pagesBackgroundColor.PIECE_LISTENING,
@@ -199,13 +210,13 @@ export default function PieceListeningPage({
     sendEvent("page_change", {
       toPage: "PIECE_LISTENING",
       url: window.location.href,
+      metadata: {
+        pieceId,
+        pieceTitle,
+        composer,
+      },
     });
   }, [sendEvent]);
-
-  // Extract piece info from payload
-  const pieceTitle = payload?.pieceTitle || "several circles";
-  const composer = payload?.composer || "Dziweńska";
-  const pieceId = payload?.pieceId || "sadfasfsd";
 
   return (
     <FadeOutWrapper
@@ -249,7 +260,7 @@ const ContentView: React.FC<ContentViewProps> = ({
   // Fullscreen image view
   if (isFullscreen && content.type === "image" && content.imageUrl) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -261,7 +272,7 @@ const ContentView: React.FC<ContentViewProps> = ({
           alt=""
           className="min-w-full min-h-full object-contain"
         />
-        <ImageAnimation type={content.imageEffect} />
+        <ImageAnimation type={content.imageEffect ?? null} />
       </motion.div>
     );
   }
@@ -309,7 +320,7 @@ const ContentView: React.FC<ContentViewProps> = ({
             <div className="relative w-full h-full flex flex-col justify-center">
               {content.imageUrl ? (
                 <>
-                  <div 
+                  <div
                     className="relative w-full aspect-[4/3] cursor-pointer hover:scale-105 transition-transform duration-200"
                     onClick={handleImageClick}
                   >
@@ -356,7 +367,7 @@ const ContentView: React.FC<ContentViewProps> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Content below image if present */}
                   {content.content && (
                     <div className="mt-6">

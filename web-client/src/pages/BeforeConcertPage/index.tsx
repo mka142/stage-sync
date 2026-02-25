@@ -5,7 +5,9 @@ import { useBackgroundColor } from "@/hooks/useBackgroundColor";
 import { useUserActivity } from "@/providers/UserActivityProvider";
 import config from "@/config";
 import FadeOutWrapper from "@/components/FadeOutWrapper";
-import ProgramView, { ConcertProgram } from "@/components/ConcertProgram/ProgramView";
+import ProgramView, {
+  ConcertProgram,
+} from "@/components/ConcertProgram/ProgramView";
 import PieceDetailView from "@/components/ConcertProgram/PieceDetailView";
 import { ProgramPiece } from "@/components/ConcertProgram/ProgramItem";
 
@@ -92,7 +94,7 @@ function AboutModal({ onClose }: AboutModalProps) {
 }
 
 interface ProgramModalProps {
-  program: ConcertProgram | null;
+  program: ConcertProgram;
   selectedPiece: ProgramPiece | null;
   onClose: () => void;
   onPieceClick: (piece: ProgramPiece) => void;
@@ -100,15 +102,22 @@ interface ProgramModalProps {
   loading: boolean;
 }
 
-function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToProgram, loading }: ProgramModalProps) {
+function ProgramModal({
+  program,
+  selectedPiece,
+  onClose,
+  onPieceClick,
+  onBackToProgram,
+  loading,
+}: ProgramModalProps) {
   return (
-    <div 
+    <div
       className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-end animate-fade-in"
       onClick={onClose}
     >
-      <div 
+      <div
         className="w-full h-[90vh] bg-background border-t border-primary/30 rounded-t-3xl overflow-hidden animate-slide-in-from-bottom"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header with close button */}
         <div className="px-7 pt-6 pb-4 border-b border-primary/20 flex items-center justify-between">
@@ -120,17 +129,27 @@ function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToP
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white transition-colors"
           >
-            <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 4l-8 8M4 4l8 8"/>
+            <svg
+              viewBox="0 0 16 16"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 4l-8 8M4 4l8 8" />
             </svg>
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="h-full overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-primary font-mono text-sm">Ładowanie programu...</div>
+              <div className="text-primary font-mono text-sm">
+                Ładowanie programu...
+              </div>
             </div>
           ) : (
             <AnimatePresence mode="wait" initial={false}>
@@ -140,15 +159,18 @@ function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToP
                   initial={{ x: "100%", opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: "100%", opacity: 0 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 300, 
-                    damping: 30, 
-                    mass: 0.8 
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    mass: 0.8,
                   }}
                   className="h-full w-full"
                 >
-                  <PieceDetailView piece={selectedPiece} onBack={onBackToProgram} />
+                  <PieceDetailView
+                    piece={selectedPiece}
+                    onBack={onBackToProgram}
+                  />
                 </motion.div>
               ) : program ? (
                 <motion.div
@@ -156,11 +178,11 @@ function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToP
                   initial={{ x: "-100%", opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: "-100%", opacity: 0 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 300, 
-                    damping: 30, 
-                    mass: 0.8 
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    mass: 0.8,
                   }}
                   className="h-full overflow-y-auto p-7"
                 >
@@ -176,8 +198,12 @@ function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToP
                   className="flex items-center justify-center h-full"
                 >
                   <div className="text-center">
-                    <div className="text-cream/60 font-sans mb-2">Program koncertu</div>
-                    <div className="text-cream/40 font-sans text-sm">będzie dostępny wkrótce</div>
+                    <div className="text-cream/60 font-sans mb-2">
+                      Program koncertu
+                    </div>
+                    <div className="text-cream/40 font-sans text-sm">
+                      będzie dostępny wkrótce
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -197,7 +223,6 @@ export default function BeforeConcertPage({
   const { sendEvent } = useUserActivity();
   const [showAbout, setShowAbout] = useState(false);
   const [showProgram, setShowProgram] = useState(false);
-  const [programData, setProgramData] = useState<ConcertProgram | null>(null);
   const [selectedPiece, setSelectedPiece] = useState<ProgramPiece | null>(null);
   const [loadingProgram, setLoadingProgram] = useState(false);
 
@@ -208,131 +233,52 @@ export default function BeforeConcertPage({
     ? payload.backgroundImageUrl
     : "/concert-poster.jpg"; // fallback
 
+  const programData = payload as ConcertProgram;
+
   // Track page view for analytics
   React.useEffect(() => {
     sendEvent("page_change", {
       toPage: "BEFORE_CONCERT",
       url: window.location.href,
-      internalTransition: false,
+      metadata: { internalTransition: false },
     });
   }, [sendEvent]);
 
   const handleShowProgram = async () => {
     sendEvent("before_concert_show_program", {
-      action: "cta_clicked",
+      fromPage: "BEFORE_CONCERT",
+      metadata: { shownProgram: true },
     });
-    
-    setLoadingProgram(true);
-    try {
-      // Try to fetch current concert program (this might not exist yet)
-      // For now, show the program modal with mock data
-      const mockProgram: ConcertProgram = {
-        title: "Wieczór Muzyki Kameralnej",
-        subtitle: "Filharmonia Wrocławska",
-        date: "25 lutego 2025",
-        pieces: [
-          {
-            pieceId: "kwartet-1",
-            piecePosition: 1,
-            composerName: "Franz Schubert",
-            pieceTitle: "Kwartet smyczkowy nr 14 d-moll \"Śmierć i Dziewczyna\"",
-            durationSeconds: 2520,
-            compositionYear: 1824,
-            descriptions: [
-              {
-                position: 1,
-                title: "o utworze",
-                content: "Jeden z najsłynniejszych kwartetów smyczkowych w historii muzyki, pełen dramatyzmu i ekspresji."
-              },
-              {
-                position: 2,
-                title: "o kompozytorze",
-                content: "Franz Schubert był austriackim kompozytorem okresu romantyzmu, twórcą ponad 600 pieśni."
-              }
-            ],
-            performers: [
-              { name: "Artysta 1", instrument: "Skrzypce I" },
-              { name: "Artysta 2", instrument: "Skrzypce II" },
-              { name: "Artysta 3", instrument: "Altówka" },
-              { name: "Artysta 4", instrument: "Wiolonczela" }
-            ],
-            status: "upcoming"
-          },
-          {
-            pieceId: "kwartet-2",
-            piecePosition: 2,
-            composerName: "Maurice Ravel",
-            pieceTitle: "Kwartet smyczkowy F-dur",
-            durationSeconds: 1680,
-            compositionYear: 1903,
-            descriptions: [
-              {
-                position: 1,
-                title: "o utworze",
-                content: "Jedyny kwartet smyczkowy Ravela, pełen impresjonistycznych kolorów i wyrafinowanej harmonii."
-              }
-            ],
-            performers: [
-              { name: "Artysta 1", instrument: "Skrzypce I" },
-              { name: "Artysta 2", instrument: "Skrzypce II" },
-              { name: "Artysta 3", instrument: "Altówka" },
-              { name: "Artysta 4", instrument: "Wiolonczela" }
-            ],
-            status: "upcoming"
-          },
-          {
-            pieceId: "kwartet-3",
-            piecePosition: 3,
-            composerName: "Piotr Czajkowski",
-            pieceTitle: "Kwartet smyczkowy nr 1 D-dur",
-            durationSeconds: 1920,
-            compositionYear: 1871,
-            descriptions: [
-              {
-                position: 1,
-                title: "o utworze",
-                content: "Młodzieńcze dzieło pełne romantycznej ekspresji i melodyjnych linii."
-              }
-            ],
-            performers: [
-              { name: "Artysta 1", instrument: "Skrzypce I" },
-              { name: "Artysta 2", instrument: "Skrzypce II" },
-              { name: "Artysta 3", instrument: "Altówka" },
-              { name: "Artysta 4", instrument: "Wiolonczela" }
-            ],
-            status: "upcoming"
-          }
-        ]
-      };
-      
-      setProgramData(mockProgram);
-      setShowProgram(true);
-    } catch (error) {
-      console.error("Failed to load program:", error);
-      // Still show the program with mock data
-      setShowProgram(true);
-    } finally {
-      setLoadingProgram(false);
-    }
+    setShowProgram(true);
   };
-  
+
   const handlePieceClick = (piece: ProgramPiece) => {
     sendEvent("program_piece_preview", {
-      pieceId: piece.pieceId,
-      pieceTitle: piece.pieceTitle,
-      composer: piece.composerName
+      fromPage: "BEFORE_CONCERT",
+      metadata: {
+        pieceId: piece.pieceId,
+        pieceTitle: piece.pieceTitle,
+        composer: piece.composerName,
+      },
     });
     setSelectedPiece(piece);
   };
-  
+
   const handleBackToProgram = () => {
+    sendEvent("back_to_program", {
+      fromPage: "BEFORE_CONCERT",
+      metadata: { returnedToProgram: true },
+    });
     setSelectedPiece(null);
   };
-  
+
   const handleCloseProgram = () => {
+    sendEvent("before_concert_show_program", {
+      fromPage: "BEFORE_CONCERT",
+      metadata: { shownProgram: false },
+    });
     setShowProgram(false);
     setSelectedPiece(null);
-    setProgramData(null);
   };
 
   return (
@@ -370,7 +316,7 @@ export default function BeforeConcertPage({
       <div className="absolute bottom-0 left-0 right-0 h-[45vh] bg-gradient-to-t from-black via-black/95 via-black/85 via-black/70 via-black/50 via-black/30 to-transparent pointer-events-none z-1" />
 
       {/* Bottom content */}
-      <motion.div 
+      <motion.div
         className="relative z-10 h-full flex flex-col justify-end p-8 pb-14"
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -379,11 +325,11 @@ export default function BeforeConcertPage({
           stiffness: 400,
           damping: 25,
           mass: 0.8,
-          delay: 0.2
+          delay: 0.2,
         }}
       >
         {/* Waiting badge */}
-        <motion.div 
+        <motion.div
           className="inline-flex items-center gap-2 mb-5 self-start"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -391,7 +337,7 @@ export default function BeforeConcertPage({
             type: "spring",
             stiffness: 400,
             damping: 25,
-            delay: 0.4
+            delay: 0.4,
           }}
         >
           <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
@@ -410,7 +356,7 @@ export default function BeforeConcertPage({
             type: "spring",
             stiffness: 400,
             damping: 25,
-            delay: 0.6
+            delay: 0.6,
           }}
         >
           {/* Glowing background gradient */}
@@ -444,10 +390,10 @@ export default function BeforeConcertPage({
 
       {/* About modal */}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
-      
+
       {/* Program modal */}
       {showProgram && (
-        <ProgramModal 
+        <ProgramModal
           program={programData}
           selectedPiece={selectedPiece}
           onClose={handleCloseProgram}

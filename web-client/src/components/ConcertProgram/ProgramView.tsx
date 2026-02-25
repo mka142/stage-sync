@@ -3,6 +3,7 @@ import ProgramItem, { ProgramPiece } from "./ProgramItem";
 
 export interface ConcertProgram {
   title: string;
+  suptitle?: string;
   subtitle: string;
   date: string;
   pieces: ProgramPiece[];
@@ -22,7 +23,7 @@ export default function ProgramView({
       {/* Header */}
       <div className="text-left space-y-4">
         <div className="text-xs tracking-[0.4em] uppercase font-mono text-primary-dark">
-          Wieczór Muzyki Kameralnej
+          {program.suptitle || "Program koncertu"}
         </div>
 
         <h1 className="text-[32px] font-black leading-tight text-foreground font-display">
@@ -93,7 +94,9 @@ export default function ProgramView({
               <span className="font-mono text-xs tracking-wide text-muted">
                 Skład i opracowanie programu cyfrowego:
               </span>
-              <span className="font-serif text-cream">Michał Kulbacki, Oleś Kulczewicz</span>
+              <span className="font-serif text-cream">
+                Michał Kulbacki, Oleś Kulczewicz
+              </span>
             </div>
           </div>
 

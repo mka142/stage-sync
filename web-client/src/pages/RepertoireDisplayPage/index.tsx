@@ -50,6 +50,7 @@ export default function RepertoireDisplayPage({
       if (currentPiece) {
         setSelectedPiece({ piece: currentPiece, internalTransition: false });
         sendEvent("auto_navigate_to_current_piece", {
+          fromPage: "REPERTOIRE_DISPLAY",
           metadata: {
             internalTransition: false,
             pieceId: currentPiece.pieceId,
@@ -66,6 +67,7 @@ export default function RepertoireDisplayPage({
   const handlePieceClick = (piece: ProgramPiece) => {
     sendEvent("program_piece_clicked", {
       metadata: {
+        fromPage: "REPERTOIRE_DISPLAY",
         internalTransition: true,
         pieceId: piece.pieceId,
         pieceTitle: piece.pieceTitle,
@@ -78,6 +80,7 @@ export default function RepertoireDisplayPage({
   const handleBackToProgram = () => {
     setSelectedPiece({ piece: null, internalTransition: true });
     sendEvent("back_to_program", {
+      fromPage: "REPERTOIRE_DISPLAY",
       metadata: {
         internalTransition: true,
         fromPiece: selectedPiece?.piece?.pieceId,

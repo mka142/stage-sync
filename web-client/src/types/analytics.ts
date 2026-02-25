@@ -17,7 +17,9 @@ export type UserActivityType =
   | "page_change"
   | "auto_navigate_to_current_piece"
   | "program_piece_clicked"
-  | "back_to_program";
+  | "back_to_program"
+  | "before_concert_show_program"
+  | "program_piece_preview";
 
 export interface ActivityEventData {
   // Common fields

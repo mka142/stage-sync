@@ -14,6 +14,13 @@ export function UserActivityTrackingProvider({
 }: UserActivityTrackingProviderProps) {
   const { userId } = useUser();
 
+  if (!userId) {
+    console.warn(
+      "UserActivityTrackingProvider: No user ID found, user activity will not be tracked.",
+    );
+    return <>{children}</>;
+  }
+
   return (
     <UserActivityProvider userId={userId} enableBatching={true} batchSize={10}>
       {children}
