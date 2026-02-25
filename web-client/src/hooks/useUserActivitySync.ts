@@ -1,61 +1,86 @@
-import { useCallback, useEffect } from 'react';
-import { useDeviceManager } from '../lib/DeviceManagerClient';
-import { useUserActivity } from '../providers/UserActivityProvider';
-import { UserActivityEvent } from '../types/analytics';
+import { useCallback, useEffect } from "react";
+import { useUserActivity } from "../providers/UserActivityProvider";
+import { UserActivityEvent } from "../types/analytics";
+import config from "../config";
 
 /**
  * Hook to automatically send user activity events to device-manager
- * via MQTT when they are captured.
+ * via HTTP POST when they are captured.
  */
 export function useUserActivitySync() {
-  const { publish, connectionStatus } = useDeviceManager();
   const { events, sessionId } = useUserActivity();
 
-  // Send activity event to device-manager
-  const sendActivityEvent = useCallback(async (event: UserActivityEvent) => {
-    if (connectionStatus !== 'connected') {
-      console.warn('Cannot send activity event: not connected to device manager');
-      return;
-    }
+  // Send activity event to device-manager via HTTP POST
+  const sendActivityEvent = useCallback(
+    async (event: UserActivityEvent) => {
+      try {
+        const response = await fetch(`${config.api.baseUrl}/api/user-activity/event`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(event),
+        });
 
-    try {
-      const topic = `user-activity/${event.userId}/${event.sessionId}`;
-      const payload = JSON.stringify(event);
-      
-      await publish(topic, payload);
-      console.log('📊 User activity event sent:', event.type);
-    } catch (error) {
-      console.error('Failed to send user activity event:', error);
-    }
-  }, [publish, connectionStatus]);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-  // Send events in batches to avoid overwhelming the server
-  const sendEventBatch = useCallback(async (events: UserActivityEvent[]) => {
-    if (connectionStatus !== 'connected' || events.length === 0) {
-      return;
-    }
+        const result = await response.json();
+        console.log("📊 User activity event sent:", event.type);
+        return result;
+      } catch (error) {
+        console.error("Failed to send user activity event:", error);
+        throw error;
+      }
+    },
+    [],
+  );
 
-    try {
-      const userId = events[0]?.userId;
-      const topic = `user-activity-batch/${userId}/${sessionId}`;
-      const payload = JSON.stringify({
-        sessionId,
-        events,
-        batchTimestamp: Date.now(),
-        count: events.length
-      });
-      
-      await publish(topic, payload);
-      console.log(`📊 User activity batch sent: ${events.length} events`);
-    } catch (error) {
-      console.error('Failed to send user activity batch:', error);
-    }
-  }, [publish, connectionStatus, sessionId]);
+  // Send events in batches via HTTP POST
+  const sendEventBatch = useCallback(
+    async (events: UserActivityEvent[]) => {
+      if (events.length === 0) {
+        return;
+      }
+
+      try {
+        const userId = events[0]?.userId;
+        const batchPayload = {
+          userId,
+          sessionId,
+          events,
+          batchTimestamp: Date.now(),
+          count: events.length,
+        };
+
+        const response = await fetch(`${config.api.baseUrl}/api/user-activity/batch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(batchPayload),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log(`📊 User activity batch sent: ${events.length} events`);
+        return result;
+      } catch (error) {
+        console.error("Failed to send user activity batch:", error);
+        throw error;
+      }
+    },
+    [sessionId],
+  );
 
   return {
     sendActivityEvent,
     sendEventBatch,
-    isConnected: connectionStatus === 'connected'
+    isConnected: true, // HTTP is always "connected"
   };
 }
 

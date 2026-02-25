@@ -1,11 +1,186 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { StateNavigationComponentProps } from "@/providers/StateNavigationProvider";
 import { useBackgroundColor } from "@/hooks/useBackgroundColor";
 import { useUserActivity } from "@/providers/UserActivityProvider";
-import { PieceImage } from "@/components/ConcertProgram/ProgramItem";
 import config from "@/config";
 import FadeOutWrapper from "@/components/FadeOutWrapper";
+
+interface ContentData {
+  type: "text" | "image";
+  content?: string;
+  imageUrl?: string;
+  caption?: string;
+  imageEffect?: "grainAnimation" | null;
+}
+
+// True stochastic grain — canvas-based, fully unpredictable
+function GrainCanvas() {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number | null>(null);
+  const stateRef = React.useRef({
+    // per-frame intensity walks randomly
+    intensity: 0.32,
+    targetInt: 0.32,
+    // grain size walks randomly
+    grainSize: 1,
+    targetSize: 1,
+    // slow spatial "clouds" — low-freq noise blobs
+    blobs: Array.from({ length: 6 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      r: 0.15 + Math.random() * 0.25,
+      vx: (Math.random() - 0.5) * 0.0008,
+      vy: (Math.random() - 0.5) * 0.0008,
+      str: 0.2 + Math.random() * 0.35,
+    })),
+    frame: 0,
+  });
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    function lerp(a: number, b: number, t: number) { 
+      return a + (b - a) * t; 
+    }
+
+    function render() {
+      const s = stateRef.current;
+      const W = canvas.width;
+      const H = canvas.height;
+      s.frame++;
+
+      // Walk intensity unpredictably
+      // Every ~8-40 frames pick a new target (random interval)
+      if (s.frame % (8 + Math.floor(Math.random() * 32)) === 0) {
+        s.targetInt = 0.08 + Math.random() * 0.52;
+      }
+      // Lerp speed itself varies — faster spikes, slower fades
+      const lerpSpeed = s.intensity < s.targetInt ? 0.12 : 0.04;
+      s.intensity = lerp(s.intensity, s.targetInt, lerpSpeed);
+      // Add frame-level jitter on top
+      const frameInt = s.intensity + (Math.random() - 0.5) * 0.08;
+
+      // Walk grain size
+      if (s.frame % (20 + Math.floor(Math.random() * 60)) === 0) {
+        s.targetSize = 0.8 + Math.random() * 1.6;
+      }
+      s.grainSize = lerp(s.grainSize, s.targetSize, 0.03);
+
+      // Move blobs
+      s.blobs.forEach(b => {
+        b.x += b.vx + (Math.random() - 0.5) * 0.0003;
+        b.y += b.vy + (Math.random() - 0.5) * 0.0003;
+        // Wrap
+        if (b.x < -0.3) b.x = 1.3;
+        if (b.x > 1.3) b.x = -0.3;
+        if (b.y < -0.3) b.y = 1.3;
+        if (b.y > 1.3) b.y = -0.3;
+        // Random velocity nudge
+        if (Math.random() < 0.005) {
+          b.vx = (Math.random() - 0.5) * 0.0012;
+          b.vy = (Math.random() - 0.5) * 0.0012;
+        }
+      });
+
+      // Build spatial weight map (low-res, 32×32)
+      const MAP = 32;
+      const weight = new Float32Array(MAP * MAP);
+      for (let my = 0; my < MAP; my++) {
+        for (let mx = 0; mx < MAP; mx++) {
+          const nx = mx / MAP;
+          const ny = my / MAP;
+          let w = 0.5; // base weight
+          s.blobs.forEach(b => {
+            const dx = nx - b.x;
+            const dy = ny - b.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            w += b.str * Math.max(0, 1 - dist / b.r);
+          });
+          weight[my * MAP + mx] = Math.min(w, 1.4);
+        }
+      }
+
+      // Draw grain
+      ctx.clearRect(0, 0, W, H);
+
+      // Number of grains scales with intensity and frame jitter
+      const count = Math.floor(W * H * 0.18 * (0.5 + frameInt));
+      const gs = s.grainSize;
+
+      for (let i = 0; i < count; i++) {
+        const px = Math.random() * W;
+        const py = Math.random() * H;
+
+        // Sample spatial weight at this position
+        const mx = Math.min(MAP - 1, Math.floor((px / W) * MAP));
+        const my = Math.min(MAP - 1, Math.floor((py / H) * MAP));
+        const w = weight[my * MAP + mx];
+
+        // Brightness: mostly white/light, occasionally darker speck
+        const bright = Math.random() < 0.85
+          ? 180 + Math.floor(Math.random() * 75)   // light grain
+          : 20 + Math.floor(Math.random() * 80);    // dark speck
+
+        // Alpha: modulated by spatial weight × global intensity × random spike
+        const spike = Math.random() < 0.03 ? 2.5 : 1.0; // rare bright flashes
+        const alpha = Math.min(1, w * frameInt * (0.4 + Math.random() * 0.6) * spike);
+
+        ctx.fillStyle = `rgba(${bright},${bright},${bright},${alpha})`;
+
+        if (gs <= 1 || Math.random() < 0.7) {
+          ctx.fillRect(px, py, gs, gs);
+        } else {
+          // Occasional larger irregular clump
+          ctx.beginPath();
+          ctx.arc(px, py, gs * (0.5 + Math.random() * 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(render);
+    }
+
+    rafRef.current = requestAnimationFrame(render);
+
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay"
+      style={{ zIndex: 2 }}
+    />
+  );
+}
+
+// ImageAnimation Component
+interface ImageAnimationProps {
+  type: "grainAnimation" | null;
+  className?: string;
+}
+
+const ImageAnimation: React.FC<ImageAnimationProps> = ({ type, className = "" }) => {
+  if (type !== "grainAnimation") return null;
+
+  return <GrainCanvas />;
+};
 
 export default function PieceListeningPage({
   shouldTransitionBegin,
@@ -13,320 +188,226 @@ export default function PieceListeningPage({
   payload,
 }: StateNavigationComponentProps) {
   const { sendEvent } = useUserActivity();
-  const [pieceImages, setPieceImages] = useState<PieceImage[]>([]);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [showSlideshow, setShowSlideshow] = useState(false);
-  const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
+  const [content, setContent] = useState<ContentData | null>("asdfasdfasdfds");
 
   useBackgroundColor(
     config.constants.pagesBackgroundColor.PIECE_LISTENING,
-    500
+    500,
   );
 
   React.useEffect(() => {
-    sendEvent('page_change', {
-      toPage: 'PIECE_LISTENING',
-      url: window.location.href
+    sendEvent("page_change", {
+      toPage: "PIECE_LISTENING",
+      url: window.location.href,
     });
   }, [sendEvent]);
 
   // Extract piece info from payload
-  const pieceTitle = payload?.pieceTitle || "Słuchanie utworu";
-  const composer = payload?.composer || "";
-  const pieceId = payload?.pieceId;
-  const initialSlideIndex = payload?.currentSlideIndex || 0;
-
-  // Load piece images when piece is available
-  useEffect(() => {
-    if (!pieceId) return;
-
-    const loadPieceImages = async () => {
-      try {
-        const response = await fetch(`${config.api.url.images}/piece/${pieceId}`);
-        const data = await response.json();
-        
-        if (data.success && data.images && data.images.length > 0) {
-          setPieceImages(data.images);
-          setCurrentSlideIndex(initialSlideIndex);
-          setShowSlideshow(true);
-        } else {
-          setShowSlideshow(false);
-        }
-      } catch (error) {
-        console.error('Failed to load piece images:', error);
-        setShowSlideshow(false);
-      }
-    };
-
-    loadPieceImages();
-  }, [pieceId, initialSlideIndex]);
-
-  // Auto-advance slides
-  useEffect(() => {
-    if (!showSlideshow || !autoPlayEnabled || pieceImages.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % pieceImages.length);
-    }, 8000); // Change slide every 8 seconds
-
-    return () => clearInterval(interval);
-  }, [showSlideshow, autoPlayEnabled, pieceImages.length]);
-
-  const nextSlide = useCallback(() => {
-    setCurrentSlideIndex((prev) => (prev + 1) % pieceImages.length);
-  }, [pieceImages.length]);
-
-  const prevSlide = useCallback(() => {
-    setCurrentSlideIndex((prev) => (prev - 1 + pieceImages.length) % pieceImages.length);
-  }, [pieceImages.length]);
-
-  const toggleAutoPlay = useCallback(() => {
-    setAutoPlayEnabled(!autoPlayEnabled);
-  }, [autoPlayEnabled]);
+  const pieceTitle = payload?.pieceTitle || "several circles";
+  const composer = payload?.composer || "Dziweńska";
+  const pieceId = payload?.pieceId || "sadfasfsd";
 
   return (
     <FadeOutWrapper
       className="h-full relative overflow-hidden"
       shouldTransitionBegin={shouldTransitionBegin}
       setTransitionFinished={setTransitionFinished}
-      style={{ 
-        color: '#F5F0E8', 
-        fontFamily: "'Cormorant Garamond', serif" 
-      }}
     >
-      {showSlideshow && pieceImages.length > 0 ? (
-        <SlideShow
-          images={pieceImages}
-          currentIndex={currentSlideIndex}
-          autoPlay={autoPlayEnabled}
-          onNext={nextSlide}
-          onPrev={prevSlide}
-          onToggleAutoPlay={toggleAutoPlay}
-          pieceTitle={pieceTitle}
-          composer={composer}
-        />
-      ) : (
-        <MinimalListeningView 
-          pieceTitle={pieceTitle}
-          composer={composer}
-        />
-      )}
+      <ContentView
+        content={payload.content}
+        pieceTitle={pieceTitle}
+        composer={composer}
+      />
     </FadeOutWrapper>
   );
 }
 
-// Slideshow Component
-interface SlideShowProps {
-  images: PieceImage[];
-  currentIndex: number;
-  autoPlay: boolean;
-  onNext: () => void;
-  onPrev: () => void;
-  onToggleAutoPlay: () => void;
+// Content View Component
+interface ContentViewProps {
+  content: ContentData;
   pieceTitle: string;
   composer: string;
 }
 
-const SlideShow: React.FC<SlideShowProps> = ({
-  images,
-  currentIndex,
-  autoPlay,
-  onNext,
-  onPrev,
-  onToggleAutoPlay,
+const ContentView: React.FC<ContentViewProps> = ({
+  content,
   pieceTitle,
   composer,
-}) => (
-  <div className="relative h-full">
-    {/* Background Image */}
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={currentIndex}
+}) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const handleImageClick = () => {
+    if (content.type === "image" && content.imageUrl) {
+      setIsFullscreen(true);
+    }
+  };
+
+  const handleFullscreenClick = () => {
+    setIsFullscreen(false);
+  };
+
+  // Fullscreen image view
+  if (isFullscreen && content.type === "image" && content.imageUrl) {
+    return (
+      <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 1 }}
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${config.api.url.images}/${images[currentIndex].filename})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        className="absolute inset-0 z-50 bg-black overflow-auto cursor-pointer"
+        onClick={handleFullscreenClick}
       >
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/40" />
-      </motion.div>
-    </AnimatePresence>
-
-    {/* Image Info Overlay - Bottom */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-8"
-    >
-      <div className="flex justify-between items-end">
-        <div className="space-y-2">
-          <h2 
-            className="text-2xl text-white"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            {pieceTitle}
-          </h2>
-          {composer && (
-            <p className="text-lg text-white/80 italic">
-              {composer}
-            </p>
-          )}
-          {images[currentIndex].description && (
-            <p className="text-sm text-white/70 max-w-md">
-              {images[currentIndex].description}
-            </p>
-          )}
-        </div>
-        
-        {/* Slide Counter */}
-        <div className="text-white/60 text-sm">
-          {currentIndex + 1} / {images.length}
-        </div>
-      </div>
-    </motion.div>
-
-    {/* Navigation Controls - Only visible on hover */}
-    <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 group">
-      {/* Previous Button */}
-      <button
-        onClick={onPrev}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-200"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      {/* Next Button */}
-      <button
-        onClick={onNext}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-200"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
-      {/* Auto-play Toggle */}
-      <button
-        onClick={onToggleAutoPlay}
-        className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
-        title={autoPlay ? "Zatrzymaj automatyczne przewijanie" : "Włącz automatyczne przewijanie"}
-      >
-        {autoPlay ? (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )}
-      </button>
-    </div>
-
-    {/* Progress Indicators */}
-    <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-2">
-      {images.map((_, index) => (
-        <button
-          key={index}
-          onClick={() => {/* Could add slide selection */}}
-          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-            index === currentIndex 
-              ? "bg-white w-6" 
-              : "bg-white/40 hover:bg-white/60"
-          }`}
+        <img
+          src={content.imageUrl}
+          alt=""
+          className="min-w-full min-h-full object-contain"
         />
-      ))}
-    </div>
-
-    {/* Auto-play Progress Bar */}
-    {autoPlay && (
-      <motion.div
-        key={currentIndex}
-        className="absolute top-0 left-0 h-1 bg-white/60"
-        initial={{ width: "0%" }}
-        animate={{ width: "100%" }}
-        transition={{ duration: 8, ease: "linear" }}
-      />
-    )}
-  </div>
-);
-
-// Minimal Listening View (No Images)
-interface MinimalListeningViewProps {
-  pieceTitle: string;
-  composer: string;
-}
-
-const MinimalListeningView: React.FC<MinimalListeningViewProps> = ({
-  pieceTitle,
-  composer,
-}) => (
-  <div className="h-full flex flex-col items-center justify-center relative overflow-hidden">
-    {/* Background with minimal visual noise for listening */}
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-radial from-amber-600/5 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-conic from-amber-500/5 to-transparent rounded-full blur-3xl animate-pulse opacity-30" />
-    </div>
-
-    {/* Minimal content during performance */}
-    <div className="relative z-10 text-center space-y-6 px-8 max-w-sm">
-      {/* Musical symbol - subtle and elegant */}
-      <div 
-        className="text-6xl text-amber-500/60 mx-auto animate-pulse"
-        style={{ 
-          fontFamily: "'Playfair Display', serif",
-          fontStyle: "italic"
-        }}
-      >
-        ♪
-      </div>
-
-      {/* Current piece info - very subtle */}
-      <div className="space-y-2 opacity-70">
-        <div 
-          className="text-sm text-stone-100"
-          style={{ fontFamily: "'Playfair Display', serif" }}
-        >
-          {pieceTitle}
-        </div>
-        
-        {composer && (
-          <div 
-            className="text-xs italic text-amber-200"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          >
-            {composer}
-          </div>
+        <ImageAnimation type={content.imageEffect} />
+      </motion.div>
+    );
+  }
+  return (
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Background with gradient based on content type */}
+      <div className="absolute inset-0 z-0">
+        {content.type === "text" && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(ellipse 120% 70% at 20% 10%, rgba(139,58,42,0.28) 0%, transparent 55%), 
+                          radial-gradient(ellipse 80% 80% at 85% 90%, rgba(196,147,63,0.12) 0%, transparent 55%), 
+                          var(--ink)`,
+            }}
+          />
+        )}
+        {content.type === "image" && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(ellipse 100% 60% at 50% 0%, rgba(30,20,10,0.9) 0%, transparent 50%), 
+                          radial-gradient(ellipse 100% 50% at 50% 100%, rgba(10,8,6,0.95) 0%, transparent 55%), 
+                          #0D0A08`,
+            }}
+          />
         )}
       </div>
 
-      {/* Listening indicator */}
-      <div className="pt-4">
-        <div 
-          className="text-[8px] tracking-[0.5em] uppercase text-stone-500"
-          style={{ fontFamily: "'DM Mono', monospace" }}
+      {/* Content Area */}
+      <div className="relative z-10 flex-1 flex flex-col justify-center px-9 pt-12 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full h-full flex flex-col justify-center"
         >
-          W trakcie wykonania
+          {content.type === "text" && (
+            <div className="font-display text-xl italic font-normal leading-relaxed text-cream/90">
+              {content.content}
+            </div>
+          )}
+
+          {content.type === "image" && (
+            <div className="relative w-full h-full flex flex-col justify-center">
+              {content.imageUrl ? (
+                <>
+                  <div 
+                    className="relative w-full aspect-[4/3] cursor-pointer hover:scale-105 transition-transform duration-200"
+                    onClick={handleImageClick}
+                  >
+                    <img
+                      src={content.imageUrl}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                    <ImageAnimation type={content.imageEffect} />
+                    {/* Top overlay */}
+                    <div
+                      className="absolute top-0 left-0 right-0 h-40 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, rgba(13,10,8,0.75) 0%, transparent 100%)",
+                      }}
+                    />
+                    {/* Bottom overlay */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-56 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(13,10,8,1) 0%, rgba(13,10,8,0.7) 40%, transparent 100%)",
+                      }}
+                    />
+                    {/* Caption */}
+                    {content.caption && (
+                      <div className="absolute bottom-24 left-0 right-0 px-8 pointer-events-none">
+                        <div className="font-body text-sm italic leading-relaxed text-cream/75">
+                          {content.caption}
+                        </div>
+                      </div>
+                    )}
+                    {/* Small click indicator - always visible */}
+                    <div className="absolute bottom-2 right-2 pointer-events-none">
+                      <div className="bg-black/30 text-cream/60 px-1.5 py-0.5 rounded text-[8px] font-mono tracking-wider uppercase backdrop-blur-sm">
+                        ⌘
+                      </div>
+                    </div>
+                    {/* Click hint overlay - on hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black/10">
+                      <div className="bg-black/50 text-white px-3 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase">
+                        Kliknij aby powiększyć
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Content below image if present */}
+                  {content.content && (
+                    <div className="mt-6">
+                      <div className="font-display text-lg italic font-normal leading-relaxed text-cream/85">
+                        {content.content}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div
+                  className="w-full aspect-[4/3] flex items-center justify-center"
+                  style={{
+                    background:
+                      "linear-gradient(160deg, #1a1008 0%, #0a0806 100%)",
+                  }}
+                >
+                  <span className="font-mono text-xs tracking-wider uppercase text-primary/25">
+                    obraz
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Bottom Bar - Now Playing */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 px-7 py-3.5 pb-7">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(10,8,6,0.98) 0%, rgba(10,8,6,0.85) 60%, transparent 100%)",
+          }}
+        />
+        <div className="relative flex items-center justify-center">
+          {/* Now Playing Info */}
+          <div className="text-center">
+            <div className="font-mono text-xs tracking-wider uppercase text-primary opacity-60 mb-1">
+              Trwa wykonanie
+            </div>
+            <div className="font-display text-sm font-semibold text-cream/80 leading-tight">
+              {pieceTitle}
+            </div>
+            <div className="font-display text-xs italic text-muted">
+              {composer}
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    {/* Subtle bottom indicator */}
-    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-      <div className="flex items-center space-x-1">
-        <div className="w-1 h-1 bg-amber-500/40 rounded-full animate-pulse" />
-        <div className="w-1 h-1 bg-amber-500/40 rounded-full animate-pulse delay-75" />
-        <div className="w-1 h-1 bg-amber-500/40 rounded-full animate-pulse delay-150" />
-      </div>
-    </div>
-  </div>
-);
+  );
+};

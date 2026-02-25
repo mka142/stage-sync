@@ -9,13 +9,12 @@ import {
 } from "./providers/StateNavigationProvider";
 import BeforeConcert from "./pages/BeforeConcertPage";
 import ConcertStartPage from "./pages/ConcertStartPage";
-import PieceAnnouncementPage from "./pages/PieceAnnouncementPage";
 import OvationPage from "./pages/OvationPage";
 import RepertoireDisplayPage from "./pages/RepertoireDisplayPage";
-import CurrentPiecePage from "./pages/CurrentPiecePage";
 import PieceListeningPage from "./pages/PieceListeningPage";
 import EndOfConcertPage from "./pages/EndOfConcertPage";
 import { LoadingWithBackgroundTransition } from "./components/Loading";
+import { UserActivityTrackingProvider } from "./providers/UserActivityTrackingProvider";
 
 import { useAppState } from "./hooks/useAppState";
 import { EventType } from "./config";
@@ -77,40 +76,34 @@ export function App() {
   }
 
   return (
-    <WithStateNavigation state={state}>
-      <StateNavigationPage<EventType>
-        pageState="BEFORE_CONCERT"
-        component={BeforeConcert}
-      />
-      <StateNavigationPage<EventType>
-        pageState="CONCERT_START"
-        component={ConcertStartPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="PIECE_ANNOUNCEMENT"
-        component={PieceAnnouncementPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="REPERTOIRE_DISPLAY"
-        component={RepertoireDisplayPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="CURRENT_PIECE"
-        component={CurrentPiecePage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="PIECE_LISTENING"
-        component={PieceListeningPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="OVATION"
-        component={OvationPage}
-      />
-      <StateNavigationPage<EventType>
-        pageState="END_OF_CONCERT"
-        component={EndOfConcertPage}
-      />
-    </WithStateNavigation>
+    <UserActivityTrackingProvider>
+      <WithStateNavigation state={state}>
+        <StateNavigationPage<EventType>
+          pageState="BEFORE_CONCERT"
+          component={BeforeConcert}
+        />
+        <StateNavigationPage<EventType>
+          pageState="CONCERT_START"
+          component={ConcertStartPage}
+        />
+        <StateNavigationPage<EventType>
+          pageState="REPERTOIRE_DISPLAY"
+          component={RepertoireDisplayPage}
+        />
+        <StateNavigationPage<EventType>
+          pageState="PIECE_LISTENING"
+          component={PieceListeningPage}
+        />
+        <StateNavigationPage<EventType>
+          pageState="OVATION"
+          component={OvationPage}
+        />
+        <StateNavigationPage<EventType>
+          pageState="END_OF_CONCERT"
+          component={EndOfConcertPage}
+        />
+      </WithStateNavigation>
+    </UserActivityTrackingProvider>
   );
 }
 

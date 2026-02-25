@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { StateNavigationComponentProps } from "@/providers/StateNavigationProvider";
 import FadeOutWrapper from "@/components/FadeOutWrapper";
 import config from "@/config";
@@ -133,8 +134,11 @@ export default function RepertoireDisplayPage({
   setTransitionFinished,
   payload,
 }: StateNavigationComponentProps) {
-  const { sendEvent } = useUserActivity();
-  const [selectedPiece, setSelectedPiece] = useState<ProgramPiece | null>(null);
+  const { sendEvent, events } = useUserActivity();
+  const [selectedPiece, setSelectedPiece] = useState<{
+    piece: ProgramPiece | null;
+    internalTransition: boolean;
+  }>({ piece: null, internalTransition: null });
 
   useBackgroundColor(
     config.constants.pagesBackgroundColor.REPERTOIRE_DISPLAY,
@@ -145,27 +149,53 @@ export default function RepertoireDisplayPage({
     sendEvent("page_change", {
       toPage: "REPERTOIRE_DISPLAY",
       url: window.location.href,
+      internalTransition: false,
     });
   }, [sendEvent]);
 
   // Use program from payload or fallback to mock data
   const concertProgram: ConcertProgram = payload;
 
+  // Check for current piece and auto-navigate to its detail view
+  React.useEffect(() => {
+    if (concertProgram?.pieces) {
+      const currentPiece = concertProgram.pieces.find(
+        (piece) => piece.status === "current",
+      );
+      if (currentPiece) {
+        setSelectedPiece({ piece: currentPiece, internalTransition: false });
+        sendEvent("auto_navigate_to_current_piece", {
+          pieceId: currentPiece.pieceId,
+          pieceTitle: currentPiece.pieceTitle,
+          composer: currentPiece.composerName,
+          internalTransition: false,
+        });
+      }
+    }
+  }, [concertProgram, sendEvent]);
+
   const handlePieceClick = (piece: ProgramPiece) => {
     sendEvent("program_piece_clicked", {
       pieceId: piece.pieceId,
       pieceTitle: piece.pieceTitle,
       composer: piece.composerName,
+      internalTransition: true,
     });
-    setSelectedPiece(piece);
+    setSelectedPiece({ piece, internalTransition: true });
   };
 
   const handleBackToProgram = () => {
-    setSelectedPiece(null);
+    setSelectedPiece({ piece: null, internalTransition: true });
     sendEvent("back_to_program", {
-      fromPiece: selectedPiece?.pieceId,
+      fromPiece: selectedPiece?.piece?.pieceId,
+      internalTransition: true,
     });
   };
+
+  if (selectedPiece.internalTransition === null) {
+    // Still determining if this is an auto-transition or user-initiated
+    return null; // or a loading spinner
+  }
 
   return (
     <FadeOutWrapper
@@ -193,16 +223,65 @@ export default function RepertoireDisplayPage({
       </div>
 
       <div className="relative z-10 max-w-3xl mx-auto w-full">
-        {selectedPiece ? (
-          <PieceDetailView piece={selectedPiece} onBack={handleBackToProgram} />
-        ) : (
-          <div className="p-8">
-            <ProgramView
-              program={concertProgram}
-              onPieceClick={handlePieceClick}
-            />
-          </div>
-        )}
+        <AnimatePresence mode="wait" initial={true}>
+          {selectedPiece.piece ? (
+            <>
+              {!selectedPiece.internalTransition ? (
+                <motion.div
+                  key={`transition-overlay-${selectedPiece.piece.pieceId}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full"
+                >
+                  <PieceDetailView
+                    piece={selectedPiece.piece}
+                    onBack={handleBackToProgram}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`piece-detail-${selectedPiece.piece.pieceId}`}
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    mass: 0.8,
+                  }}
+                  className="w-full"
+                >
+                  <PieceDetailView
+                    piece={selectedPiece.piece}
+                    onBack={handleBackToProgram}
+                  />
+                </motion.div>
+              )}
+            </>
+          ) : (
+            <motion.div
+              key={`program-view-${concertProgram?.title || "default"}`}
+              initial={{ y: 20, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ x: "-100%", opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 25,
+                mass: 0.8,
+              }}
+              className="p-8 w-full"
+            >
+              <ProgramView
+                program={concertProgram}
+                onPieceClick={handlePieceClick}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </FadeOutWrapper>
   );

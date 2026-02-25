@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { StateNavigationComponentProps } from "@/providers/StateNavigationProvider";
 import { useBackgroundColor } from "@/hooks/useBackgroundColor";
 import { useUserActivity } from "@/providers/UserActivityProvider";
@@ -131,19 +132,56 @@ function ProgramModal({ program, selectedPiece, onClose, onPieceClick, onBackToP
             <div className="flex items-center justify-center h-full">
               <div className="text-primary font-mono text-sm">Ładowanie programu...</div>
             </div>
-          ) : selectedPiece ? (
-            <PieceDetailView piece={selectedPiece} onBack={onBackToProgram} />
-          ) : program ? (
-            <div className="h-full overflow-y-auto p-7">
-              <ProgramView program={program} onPieceClick={onPieceClick} />
-            </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-cream/60 font-sans mb-2">Program koncertu</div>
-                <div className="text-cream/40 font-sans text-sm">będzie dostępny wkrótce</div>
-              </div>
-            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              {selectedPiece ? (
+                <motion.div
+                  key="piece-detail-modal"
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 30, 
+                    mass: 0.8 
+                  }}
+                  className="h-full w-full"
+                >
+                  <PieceDetailView piece={selectedPiece} onBack={onBackToProgram} />
+                </motion.div>
+              ) : program ? (
+                <motion.div
+                  key="program-view-modal"
+                  initial={{ x: "-100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "-100%", opacity: 0 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 30, 
+                    mass: 0.8 
+                  }}
+                  className="h-full overflow-y-auto p-7"
+                >
+                  <ProgramView program={program} onPieceClick={onPieceClick} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty-state"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-center h-full"
+                >
+                  <div className="text-center">
+                    <div className="text-cream/60 font-sans mb-2">Program koncertu</div>
+                    <div className="text-cream/40 font-sans text-sm">będzie dostępny wkrótce</div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </div>
       </div>
@@ -175,6 +213,7 @@ export default function BeforeConcertPage({
     sendEvent("page_change", {
       toPage: "BEFORE_CONCERT",
       url: window.location.href,
+      internalTransition: false,
     });
   }, [sendEvent]);
 
@@ -331,21 +370,52 @@ export default function BeforeConcertPage({
       <div className="absolute bottom-0 left-0 right-0 h-[45vh] bg-gradient-to-t from-black via-black/95 via-black/85 via-black/70 via-black/50 via-black/30 to-transparent pointer-events-none z-1" />
 
       {/* Bottom content */}
-      <div className="relative z-10 h-full flex flex-col justify-end p-8 pb-14">
+      <motion.div 
+        className="relative z-10 h-full flex flex-col justify-end p-8 pb-14"
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 25,
+          mass: 0.8,
+          delay: 0.2
+        }}
+      >
         {/* Waiting badge */}
-        <div className="inline-flex items-center gap-2 mb-5 self-start">
+        <motion.div 
+          className="inline-flex items-center gap-2 mb-5 self-start"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+            delay: 0.4
+          }}
+        >
           <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
           <span className="font-mono text-xs tracking-wider uppercase text-accent drop-shadow-lg">
             Koncert rozpocznie się za chwilę
           </span>
-        </div>
+        </motion.div>
 
-        {/* CTA button */}
-        <button
-          className="group w-full p-5 bg-white/8 border border-white/25 rounded-xl backdrop-blur-2xl hover:bg-white/15 hover:border-primary/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-between gap-3 relative overflow-hidden"
+        {/* CTA button with glow effect */}
+        <motion.button
+          className="group w-full p-5 bg-white/8 border border-white/25 rounded-xl backdrop-blur-2xl hover:bg-white/15 hover:border-primary/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-between gap-3 relative overflow-hidden shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.5)]"
           onClick={handleShowProgram}
+          initial={{ y: 20, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+            delay: 0.6
+          }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/12 to-transparent pointer-events-none" />
+          {/* Glowing background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent pointer-events-none animate-pulse" />
 
           <div className="text-left">
             <div className="font-mono text-xs tracking-wider uppercase text-primary mb-1">
@@ -356,7 +426,7 @@ export default function BeforeConcertPage({
             </div>
           </div>
 
-          <div className="w-10 h-10 bg-primary/20 border border-primary/40 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/35 transition-colors">
+          <div className="w-10 h-10 bg-primary/25 border border-primary/50 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/40 transition-colors shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)]">
             <svg
               viewBox="0 0 16 16"
               className="w-4 h-4 text-accent"
@@ -369,8 +439,8 @@ export default function BeforeConcertPage({
               <path d="M3 8h10M9 4l4 4-4 4" />
             </svg>
           </div>
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* About modal */}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}

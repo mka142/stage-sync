@@ -13,7 +13,6 @@ import { DeviceManagerProvider } from "./lib/DeviceManagerClient";
 import { EventSchema } from "./lib/mqtt";
 import { EventType } from "./config";
 import NoZoomWrapper from "./components/NoZoomWrapper";
-import { UserActivityTrackingProvider } from "./providers/UserActivityTrackingProvider";
 import IosOnlySafari from "./lib/IosOnlySafari";
 
 const elem = document.getElementById("root")!;
@@ -23,11 +22,9 @@ const app = (
     <IosOnlySafari>
       <UserProvider>
         <DeviceManagerProvider<EventSchema<EventType>> maxHistorySize={100}>
-          <UserActivityTrackingProvider>
-            <NoZoomWrapper includeDoubleTap={true} includePinch={true}>
-              <App />
-            </NoZoomWrapper>
-          </UserActivityTrackingProvider>
+          <NoZoomWrapper includeDoubleTap={true} includePinch={true}>
+            <App />
+          </NoZoomWrapper>
         </DeviceManagerProvider>
       </UserProvider>
     </IosOnlySafari>

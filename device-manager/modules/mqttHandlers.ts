@@ -1,5 +1,4 @@
 import { UserService } from "./user";
-import { userActivityService } from "./user-activity";
 
 import type { MqttBrokerHandlers } from "@/modules/connections/broker";
 
@@ -25,5 +24,10 @@ export const mqttHandlers: MqttBrokerHandlers = {
 
     // Example: Log to monitoring system, send alerts, etc.
     // await logErrorToMonitoring(client.id, error);
+  },
+
+  onPublish: (packet, client) => {
+    // Handle other message types here (user-activity now uses HTTP POST)
+    console.log(`📤 Message published to topic: ${packet.topic}`);
   },
 };

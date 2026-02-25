@@ -35,18 +35,18 @@
               </div>
             </div>
 
-            <div class="ui clearing segment">
-              <h3 class="ui left floated header">Komunikaty</h3>
-              <div class="ui right floated buttons">
-                <a href="<%= url.admin %>/concerts/<%= concert._id %>/export-events" class="ui basic green button" download>
-                  <i class="download icon"></i>Eksportuj wydarzenia
-                </a>
-                <button class="ui basic blue button" onclick="toggleImportForm()">
-                  <i class="upload icon"></i>Importuj wydarzenia
-                </button>
-                <a href="<%= url.admin %>/events/new/<%= concert._id %>" class="ui basic blue button">
-                  <i class="plus icon"></i>Dodaj komunikat
-                </a>
+            <div class="ui segment">
+                <h3 class="ui header">Komunikaty</h3>
+                  <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: stretch;">
+                    <a href="<%= url.admin %>/concerts/<%= concert._id %>/export-events" class="ui basic green button" download style="display: flex; align-items: center;">
+                      <i class="download icon"></i>Eksportuj wydarzenia
+                    </a>
+                    <button class="ui basic blue button" onclick="toggleImportForm()" style="display: flex; align-items: center;">
+                      <i class="upload icon"></i>Importuj wydarzenia
+                    </button>
+                    <a href="<%= url.admin %>/events/new/<%= concert._id %>" class="ui basic blue button" style="display: flex; align-items: center;">
+                      <i class="plus icon"></i>Dodaj komunikat
+                    </a>
               </div>
             </div>
 
@@ -154,20 +154,60 @@
                 </div>
               </h4>
               
-              <form action="/api/images/upload" method="POST" enctype="multipart/form-data" class="ui form" id="image-upload-form">
+              <div class="ui stackable one column grid">
+                <div class="column">
+                  <form action="/api/images/upload" method="POST" enctype="multipart/form-data" class="ui form" id="image-upload-form">
+                    <div class="field">
+                      <div class="ui action input">
+                        <input type="file" name="image" accept="image/*" required style="display: none;" id="image-file-input">
+                        <input type="text" placeholder="Wybierz plik obrazu..." readonly id="image-filename-display">
+                        <button type="button" class="ui icon button" onclick="document.getElementById('image-file-input').click();">
+                          <i class="folder open outline icon"></i>
+                        </button>
+                        <button type="submit" class="ui primary button">Upload</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                
+                <div class="column">
+                  <div class="ui right floated">
+                    <a href="/api/images/export" class="ui green button" download>
+                      <i class="download icon"></i>Eksportuj wszystkie obrazy
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="upload-result" style="margin-top: 10px;"></div>
+            </div>
+            
+            <!-- Batch Import -->
+            <div class="ui segment">
+              <h4 class="ui header">
+                <i class="upload icon"></i>
+                <div class="content">
+                  Import obrazów z ZIP
+                  <div class="sub header">Importuj pakiet obrazów z metadanymi</div>
+                </div>
+              </h4>
+              
+              <form action="/api/images/import" method="POST" enctype="multipart/form-data" class="ui form" id="image-import-form">
                 <div class="field">
                   <div class="ui action input">
-                    <input type="file" name="image" accept="image/*" required style="display: none;" id="image-file-input">
-                    <input type="text" placeholder="Wybierz plik obrazu..." readonly id="image-filename-display">
-                    <button type="button" class="ui icon button" onclick="document.getElementById('image-file-input').click();">
+                    <input type="file" name="zipFile" accept=".zip" required style="display: none;" id="zip-file-input">
+                    <input type="text" placeholder="Wybierz plik ZIP z obrazami..." readonly id="zip-filename-display">
+                    <button type="button" class="ui icon button" onclick="document.getElementById('zip-file-input').click();">
                       <i class="folder open outline icon"></i>
                     </button>
-                    <button type="submit" class="ui primary button">Upload</button>
+                    <button type="submit" class="ui orange button">
+                      <i class="upload icon"></i>Importuj ZIP
+                    </button>
                   </div>
                 </div>
               </form>
               
-              <div id="upload-result" style="margin-top: 10px;"></div>
+              <div id="import-result" style="margin-top: 10px;"></div>
             </div>
 
             <!-- Usage instructions -->
@@ -179,6 +219,22 @@
               <div class="ui code">&lt;image uuid="UUID" width="20%"/&gt;</div>
               <div class="ui code">&lt;image uuid="UUID" width="50"/&gt;</div>
               <p>Tag zostanie automatycznie przekonwertowany na właściwy link do obrazu z odpowiednim rozmiarem.</p>
+              
+              <div class="ui horizontal divider">Export & Import</div>
+              
+              <p><strong>Eksport obrazów:</strong> Pobierz wszystkie przesłane obrazy jako plik ZIP zawierający:</p>
+              <ul>
+                <li>Wszystkie pliki obrazów z nazwami UUID-NazwaOrygianla</li>
+                <li>Plik metadata.json z informacjami o obrazach</li>
+                <li>Możliwość importu do innego systemu</li>
+              </ul>
+              
+              <p><strong>Import obrazów:</strong> Prześlij plik ZIP wyeksportowany przez system:</p>
+              <ul>
+                <li>Automatyczne wykrycie konfliktów UUID</li>
+                <li>Przywracanie oryginalnych nazw i metadanych</li>
+                <li>Bezpieczny import z raportowaniem rezultatów</li>
+              </ul>
             </div>
             
             <!-- Images list -->
@@ -287,6 +343,11 @@
         document.getElementById('image-filename-display').value = filename;
       });
       
+      document.getElementById('zip-file-input').addEventListener('change', function(e) {
+        const filename = e.target.files[0]?.name || '';
+        document.getElementById('zip-filename-display').value = filename;
+      });
+      
       // Upload form handling
       document.getElementById('image-upload-form').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -309,6 +370,7 @@
               <p><strong>UUID:</strong> <code>${data.image.uuid}</code></p>
               <p>Użyj tego UUID w treści JSON: <code>&lt;image uuid="${data.image.uuid}"/&gt;</code></p>
             </div>`;
+            clearResultMessage('upload-result');
           } else {
             const resultDiv = document.getElementById('upload-result');
             resultDiv.innerHTML = `<div class="ui error message">Błąd: ${data.error || 'Nieznany błąd'}</div>`;
@@ -318,6 +380,54 @@
           console.error('Upload error:', err);
           const resultDiv = document.getElementById('upload-result');
           resultDiv.innerHTML = '<div class="ui error message">Błąd podczas przesyłania obrazu</div>';
+        });
+      });
+      
+      // Import form handling
+      document.getElementById('image-import-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const resultDiv = document.getElementById('import-result');
+        
+        // Show loading message
+        resultDiv.innerHTML = '<div class="ui active inline loader"></div> Importowanie obrazów...';
+        
+        fetch('/api/images/import', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            loadImagesList(); // Refresh the images list
+            document.getElementById('zip-file-input').value = '';
+            document.getElementById('zip-filename-display').value = '';
+            
+            let message = `<div class="ui success message">
+              <div class="header">Import zakończony pomyślnie!</div>
+              <p><strong>Zaimportowano:</strong> ${data.imported} obrazów</p>`;
+            
+            if (data.conflicts > 0) {
+              message += `<p><strong>Pominięto:</strong> ${data.conflicts} obrazów (konflikty UUID)</p>`;
+              if (data.conflictDetails && data.conflictDetails.length > 0) {
+                message += '<p><strong>Pominięte pliki:</strong></p><ul>';
+                data.conflictDetails.forEach(conflict => {
+                  message += `<li>${conflict}</li>`;
+                });
+                message += '</ul>';
+              }
+            }
+            
+            message += '</div>';
+            resultDiv.innerHTML = message;
+            clearResultMessage('import-result', 7000); // Clear after 7 seconds for import messages
+          } else {
+            resultDiv.innerHTML = `<div class="ui error message">Błąd importu: ${data.error || 'Nieznany błąd'}</div>`;
+          }
+        })
+        .catch(err => {
+          console.error('Import error:', err);
+          resultDiv.innerHTML = '<div class="ui error message">Błąd podczas importowania obrazów</div>';
         });
       });
       
@@ -343,6 +453,11 @@
                         <code>&lt;image uuid="${img.uuid}"/&gt;</code>
                       </div>
                     </div>
+                    <div class="extra content">
+                      <button class="ui small red button" onclick="deleteImage('${img.uuid}', '${img.originalName}')">
+                        <i class="trash icon"></i> Usuń
+                      </button>
+                    </div>
                   </div>`;
                 });
                 html += '</div>';
@@ -354,6 +469,43 @@
             console.error('Image list error:', err);
             document.getElementById('images-list-content').innerHTML = 'Błąd podczas ładowania listy obrazów.';
           });
+      }
+      
+      // Delete image function
+      function deleteImage(uuid, filename) {
+        if (confirm(`Czy na pewno chcesz usunąć obraz "${filename}"?\n\nTa operacja jest nieodwracalna i może spowodować problemy jeśli obraz jest używany w wydarzeniach koncertu.`)) {
+          fetch(`/api/images/${uuid}`, {
+            method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              loadImagesList(); // Refresh the images list
+              const resultDiv = document.getElementById('upload-result');
+              resultDiv.innerHTML = `<div class="ui success message">
+                <div class="header">Obraz został usunięty</div>
+                <p>Obraz "${filename}" został pomyślnie usunięty.</p>
+              </div>`;
+              clearResultMessage('upload-result');
+            } else {
+              alert(`Błąd podczas usuwania obrazu: ${data.error || 'Nieznany błąd'}`);
+            }
+          })
+          .catch(err => {
+            console.error('Delete error:', err);
+            alert('Błąd podczas usuwania obrazu');
+          });
+        }
+      }
+      
+      // Clear result messages after some time
+      function clearResultMessage(elementId, delay = 5000) {
+        setTimeout(() => {
+          const element = document.getElementById(elementId);
+          if (element && element.innerHTML.includes('success')) {
+            element.innerHTML = '';
+          }
+        }, delay);
       }
       
       // Initialize image management on page load
