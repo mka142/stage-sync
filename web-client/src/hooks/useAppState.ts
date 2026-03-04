@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { useDeviceManager } from "@/lib/DeviceManagerClient";
 import { useAutoConnect } from "@/hooks/useAutoConnect";
@@ -47,11 +47,17 @@ const isEventDifferent = (
 };
 
 const useWindowActivation = (onActivate: () => void) => {
+  const latestCallback = useRef(onActivate);
+
+  useEffect(() => {
+    latestCallback.current = onActivate;
+  }, [onActivate]);
+
   useEffect(() => {
     // Define the handler for window activation events
     const handleActivation = () => {
-      if (typeof onActivate === "function") {
-        onActivate();
+      if (typeof latestCallback.current === "function") {
+        latestCallback.current();
       }
     };
 
@@ -66,7 +72,7 @@ const useWindowActivation = (onActivate: () => void) => {
       window.removeEventListener("load", handleActivation);
       window.removeEventListener("pageshow", handleActivation);
     };
-  }, [onActivate]); // Re-run effect if onActivate changes
+  }, []); // Run only once
 };
 
 export const useAppState = () => {
@@ -129,12 +135,17 @@ export const useAppState = () => {
     setupStateManually();
   });
 
+  const latestSetup = useRef(setupStateManually);
+  useEffect(() => {
+    latestSetup.current = setupStateManually;
+  }, [setupStateManually]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setupStateManually();
+      latestSetup.current();
     }, EVENT_INVALIDATION_INTERVAL_MS);
     return () => clearInterval(interval);
-  });
+  }, []);
 
   useEffect(() => {
     return () => {
