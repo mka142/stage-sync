@@ -1,8 +1,29 @@
 import { mqttPublisher } from "../publisher";
+import { config } from "@/config";
+import { ImageParser, readImageMetadata } from "@/modules/images";
 
 import type { EventSchema } from "../types";
 import type { OperationResult } from "@/lib/types";
 import type { Event } from "@/modules/admin";
+
+/**
+ * Helper function to recursively process payload content with ImageParser
+ */
+function processPayloadContent(obj: any, imageParser: ImageParser): any {
+  if (typeof obj === 'string') {
+    const result = imageParser.parseContent(obj);
+    return result.content;
+  } else if (Array.isArray(obj)) {
+    return obj.map(item => processPayloadContent(item, imageParser));
+  } else if (obj && typeof obj === 'object') {
+    const processed: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      processed[key] = processPayloadContent(value, imageParser);
+    }
+    return processed;
+  }
+  return obj;
+}
 
 /**
  * Publisher Service - Business Logic Layer
@@ -37,12 +58,19 @@ export class PublisherService {
         };
       }
 
+      let processedPayload = event.payload;
+      if (processedPayload && typeof processedPayload === 'object') {
+        const imageParser = new ImageParser({ domain: config.images.domain });
+        imageParser.setImageMetadata(readImageMetadata());
+        processedPayload = processPayloadContent(processedPayload, imageParser);
+      }
+
       // Convert Event to EventSchema format for MQTT
       const eventSchema: EventSchema = {
         concertId: event.concertId,
         eventType: event.eventType,
         label: event.label,
-        payload: event.payload,
+        payload: processedPayload,
         position: event.position,
       };
 
@@ -88,7 +116,19 @@ export class PublisherService {
         };
       }
 
-      await mqttPublisher.broadcastEvent(eventSchema);
+      let processedPayload = eventSchema.payload;
+      if (processedPayload && typeof processedPayload === 'object') {
+        const imageParser = new ImageParser({ domain: config.images.domain });
+        imageParser.setImageMetadata(readImageMetadata());
+        processedPayload = processPayloadContent(processedPayload, imageParser);
+      }
+
+      const processedEventSchema = {
+        ...eventSchema,
+        payload: processedPayload
+      };
+
+      await mqttPublisher.broadcastEvent(processedEventSchema);
 
       return { success: true, data: true };
     } catch (error) {
