@@ -1,5 +1,5 @@
 import React from "react";
-import { useAppState } from "../hooks/useAppState";
+import { useUserId } from "../providers/UserProvider";
 import { UserActivityProvider } from "../providers/UserActivityProvider";
 import { useUserActivitySync } from "../hooks/useUserActivitySync";
 import UserActivitySync from "@/components/UserActivitySync";
@@ -15,7 +15,7 @@ interface UserActivityTrackingProviderProps {
 export function UserActivityTrackingProvider({
   children,
 }: UserActivityTrackingProviderProps) {
-  const { userId } = useAppState();
+  const userId = useUserId();
 
   if (!userId) {
     console.warn(
