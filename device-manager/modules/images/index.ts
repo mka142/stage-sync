@@ -5,4 +5,4 @@
 export { default as imageApiRoutes } from "./routes/api";
 export { readImageMetadata, writeImageMetadata } from "./routes/api";
 export * from "./types";
-export { ImageParser, createImageParser } from "./lib/parser";
+export { ImageParser, createImageParser, processPayloadContent } from "./lib/parser";

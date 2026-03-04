@@ -127,6 +127,30 @@ export class ImageParser {
 }
 
 /**
+ * Helper function to recursively process payload content
+ * Processes any data structure and applies ImageParser to all string values
+ */
+export function processPayloadContent(obj: any, imageParser: ImageParser): any {
+  if (typeof obj === 'string') {
+    // Process string content through ImageParser
+    const result = imageParser.parseContent(obj);
+    return result.content;
+  } else if (Array.isArray(obj)) {
+    // Process array elements
+    return obj.map(item => processPayloadContent(item, imageParser));
+  } else if (obj && typeof obj === 'object') {
+    // Process object properties
+    const processed: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      processed[key] = processPayloadContent(value, imageParser);
+    }
+    return processed;
+  }
+  // Return as-is for other types (numbers, booleans, null, etc.)
+  return obj;
+}
+
+/**
  * Create a parser instance with environment configuration
  */
 export function createImageParser(): ImageParser {

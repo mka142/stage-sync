@@ -8,6 +8,8 @@ import { EventService } from "./eventService";
 import type { Concert } from "../types";
 import type { OperationResult } from "@/lib/types";
 import type { ObjectId } from "mongodb";
+import { ImageParser, processPayloadContent, readImageMetadata } from "@/modules/images";
+import { config } from "@/config";
 
 /**
  * Concert Service - Business Logic Layer
@@ -78,8 +80,17 @@ export class ConcertService {
       }
 
       if (publish) {
+        // Process payload content through ImageParser to convert <image uuid="..."/> tags
+        const processedEvent = { ...event };
+        if (event.payload && typeof event.payload === "object") {
+          const imageParser = new ImageParser({ domain: config.images.domain });
+          // Load image metadata so parser can resolve UUIDs
+          const imageMetadata = readImageMetadata();
+          imageParser.setImageMetadata(imageMetadata);
+          processedEvent.payload = processPayloadContent(event.payload, imageParser);
+        }
         // Optionally, publish the event via MQTT when setting it active
-        const pubRes = await PublisherService.publishEvent(event);
+        const pubRes = await PublisherService.publishEvent(processedEvent);
         if (!pubRes.success) {
           console.error("Failed to publish event when setting active:", pubRes.error);
           return { success: false, error: "Failed to publish event" };

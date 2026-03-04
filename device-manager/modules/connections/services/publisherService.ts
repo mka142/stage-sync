@@ -1,29 +1,8 @@
 import { mqttPublisher } from "../publisher";
-import { config } from "@/config";
-import { ImageParser, readImageMetadata } from "@/modules/images";
 
 import type { EventSchema } from "../types";
 import type { OperationResult } from "@/lib/types";
 import type { Event } from "@/modules/admin";
-
-/**
- * Helper function to recursively process payload content with ImageParser
- */
-function processPayloadContent(obj: any, imageParser: ImageParser): any {
-  if (typeof obj === 'string') {
-    const result = imageParser.parseContent(obj);
-    return result.content;
-  } else if (Array.isArray(obj)) {
-    return obj.map(item => processPayloadContent(item, imageParser));
-  } else if (obj && typeof obj === 'object') {
-    const processed: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      processed[key] = processPayloadContent(value, imageParser);
-    }
-    return processed;
-  }
-  return obj;
-}
 
 /**
  * Publisher Service - Business Logic Layer
@@ -32,12 +11,12 @@ function processPayloadContent(obj: any, imageParser: ImageParser): any {
 export class PublisherService {
   /**
    * Broadcast an event from the database to all connected MQTT clients
-   * 
+   *
    * Converts a database Event to EventSchema format and publishes it via MQTT.
-   * 
+   *
    * @param event - Event object from the database (Concert Event)
    * @returns OperationResult indicating success or failure
-   * 
+   *
    * @example
    * ```typescript
    * const event = await EventService.getEventById("507f1f77bcf86cd799439011");
@@ -58,19 +37,12 @@ export class PublisherService {
         };
       }
 
-      let processedPayload = event.payload;
-      if (processedPayload && typeof processedPayload === 'object') {
-        const imageParser = new ImageParser({ domain: config.images.domain });
-        imageParser.setImageMetadata(readImageMetadata());
-        processedPayload = processPayloadContent(processedPayload, imageParser);
-      }
-
       // Convert Event to EventSchema format for MQTT
       const eventSchema: EventSchema = {
         concertId: event.concertId,
         eventType: event.eventType,
         label: event.label,
-        payload: processedPayload,
+        payload: event.payload,
         position: event.position,
       };
 
@@ -88,12 +60,12 @@ export class PublisherService {
 
   /**
    * Broadcast an EventSchema directly to all connected MQTT clients
-   * 
+   *
    * Use this when you already have an EventSchema object (not from database).
-   * 
+   *
    * @param eventSchema - EventSchema object ready for MQTT publishing
    * @returns OperationResult indicating success or failure
-   * 
+   *
    * @example
    * ```typescript
    * const eventSchema: EventSchema = {
@@ -103,7 +75,7 @@ export class PublisherService {
    *   payload: { message: "Hello" },
    *   position: 1
    * };
-   * 
+   *
    * const result = await PublisherService.broadcastEventSchema(eventSchema);
    * ```
    */
@@ -116,19 +88,7 @@ export class PublisherService {
         };
       }
 
-      let processedPayload = eventSchema.payload;
-      if (processedPayload && typeof processedPayload === 'object') {
-        const imageParser = new ImageParser({ domain: config.images.domain });
-        imageParser.setImageMetadata(readImageMetadata());
-        processedPayload = processPayloadContent(processedPayload, imageParser);
-      }
-
-      const processedEventSchema = {
-        ...eventSchema,
-        payload: processedPayload
-      };
-
-      await mqttPublisher.broadcastEvent(processedEventSchema);
+      await mqttPublisher.broadcastEvent(eventSchema);
 
       return { success: true, data: true };
     } catch (error) {
@@ -142,9 +102,9 @@ export class PublisherService {
 
   /**
    * Check if the MQTT publisher is currently connected to the broker
-   * 
+   *
    * @returns true if connected, false otherwise
-   * 
+   *
    * @example
    * ```typescript
    * if (PublisherService.isConnected()) {
@@ -158,9 +118,9 @@ export class PublisherService {
 
   /**
    * Get the connection status of the MQTT publisher
-   * 
+   *
    * @returns OperationResult with connection status
-   * 
+   *
    * @example
    * ```typescript
    * const status = PublisherService.getConnectionStatus();

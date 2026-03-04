@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { config } from "@/config";
 import { UserService } from "@/modules/user/services/userService";
-import { ImageParser, readImageMetadata } from "@/modules/images";
+import { ImageParser, readImageMetadata, processPayloadContent } from "@/modules/images";
 
 import { ConcertService, EventService } from "../../services";
 
@@ -64,26 +64,5 @@ router.get("/currentEvent", async (req: Request, res: Response) => {
     data: processedEvent,
   });
 });
-
-// Helper function to recursively process payload content
-function processPayloadContent(obj: any, imageParser: ImageParser): any {
-  if (typeof obj === 'string') {
-    // Process string content through ImageParser
-    const result = imageParser.parseContent(obj);
-    return result.content;
-  } else if (Array.isArray(obj)) {
-    // Process array elements
-    return obj.map(item => processPayloadContent(item, imageParser));
-  } else if (obj && typeof obj === 'object') {
-    // Process object properties
-    const processed: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      processed[key] = processPayloadContent(value, imageParser);
-    }
-    return processed;
-  }
-  // Return as-is for other types (numbers, booleans, null, etc.)
-  return obj;
-}
 
 export default router;
