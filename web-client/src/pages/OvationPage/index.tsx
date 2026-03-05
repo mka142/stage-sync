@@ -15,56 +15,60 @@ export default function OvationPage({
   useBackgroundColor(config.constants.pagesBackgroundColor.OVATION, 500);
 
   React.useEffect(() => {
-    sendEvent('page_change', {
-      fromPage: 'SYSTEM',
-      toPage: 'OVATION',
-      url: window.location.href
+    sendEvent("page_change", {
+      fromPage: "SYSTEM",
+      toPage: "OVATION",
+      url: window.location.href,
     });
   }, [sendEvent]);
 
+  const topMessage = payload?.topMessage || "Brawo!";
   const message = payload?.message || "Brawo!";
+  const messageSup =
+    payload?.messageSup || "Publiczność wyraża swoje uznanie dla artystów";
+  const messageSub = payload?.messageSub || "Wspaniałe wykonanie!";
 
   return (
     <FadeOutWrapper
       className="h-full flex flex-col items-center justify-center relative overflow-hidden"
       shouldTransitionBegin={shouldTransitionBegin}
       setTransitionFinished={setTransitionFinished}
-      style={{ 
-        color: '#F5F0E8', 
-        fontFamily: "'Cormorant Garamond', serif" 
+      style={{
+        color: "#F5F0E8",
+        fontFamily: "'Cormorant Garamond', serif",
       }}
     >
       {/* Background celebration effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial from-amber-600/20 via-amber-600/5 to-transparent opacity-90" />
-        
+
         {/* Floating musical notes */}
-        <div 
+        <div
           className="absolute top-1/4 left-1/4 text-3xl text-amber-500/30 animate-bounce"
-          style={{ 
+          style={{
             fontFamily: "'Playfair Display', serif",
             fontStyle: "italic",
-            animationDelay: "0s"
+            animationDelay: "0s",
           }}
         >
           ♪
         </div>
-        <div 
+        <div
           className="absolute top-1/3 right-1/3 text-4xl text-amber-500/20 animate-bounce"
-          style={{ 
+          style={{
             fontFamily: "'Playfair Display', serif",
             fontStyle: "italic",
-            animationDelay: "0.5s"
+            animationDelay: "0.5s",
           }}
         >
           ♫
         </div>
-        <div 
+        <div
           className="absolute bottom-1/3 left-1/3 text-2xl text-amber-500/25 animate-bounce"
-          style={{ 
+          style={{
             fontFamily: "'Playfair Display', serif",
             fontStyle: "italic",
-            animationDelay: "1s"
+            animationDelay: "1s",
           }}
         >
           ♪
@@ -74,27 +78,27 @@ export default function OvationPage({
       {/* Main content */}
       <div className="relative z-10 text-center space-y-8 px-8 max-w-lg">
         {/* Applause indicator */}
-        <div 
+        <div
           className="text-xs tracking-[0.4em] uppercase text-amber-500 animate-pulse"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
-          Aplauz
+          {topMessage}
         </div>
 
         {/* Main celebration message */}
         <div className="space-y-6">
-          <h1 
+          <h1
             className="text-[48px] font-black leading-tight text-stone-100"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             {message}
           </h1>
-          
-          <div 
+
+          <div
             className="text-lg italic text-amber-200"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            Wspaniałe wykonanie!
+            {messageSub}
           </div>
         </div>
 
@@ -110,11 +114,11 @@ export default function OvationPage({
         </div>
 
         {/* Audience appreciation */}
-        <div 
+        <div
           className="text-sm text-stone-300"
           style={{ fontFamily: "'Cormorant Garamond', serif" }}
         >
-          Publiczność wyraża swoje uznanie dla artystów
+          {messageSup}
         </div>
       </div>
 
@@ -122,11 +126,11 @@ export default function OvationPage({
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-amber-500/60 rounded-full animate-pulse" />
-          <div 
+          <div
             className="w-3 h-3 bg-amber-500/60 rounded-full animate-pulse"
             style={{ animationDelay: "0.3s" }}
           />
-          <div 
+          <div
             className="w-3 h-3 bg-amber-500/60 rounded-full animate-pulse"
             style={{ animationDelay: "0.6s" }}
           />
