@@ -71,6 +71,42 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /concerts/:id/dashboard - Show live tension dashboard
+ */
+router.get("/:id/dashboard", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).render("error", {
+        message: "Nieprawidłowy identyfikator koncertu",
+        title: "Błąd",
+      });
+    }
+
+    const concert = await ConcertService.getConcertById(id);
+
+    if (!concert) {
+      return res.status(404).render("error", {
+        message: "Koncert nie został znaleziony",
+        title: "Błąd",
+      });
+    }
+
+    res.render("conference_dashboard", {
+      title: `Live Dashboard: ${concert.name}`,
+      concert,
+    });
+  } catch (error) {
+    console.error("Failed to get dashboard:", error);
+    res.status(500).render("error", {
+      message: "Nie udało się załadować dashboardu",
+      title: "Błąd",
+    });
+  }
+});
+
+/**
  * POST /concerts - Create new concert (form submission)
  */
 router.post("/", async (req: Request, res: Response) => {

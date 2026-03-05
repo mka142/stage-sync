@@ -117,6 +117,44 @@ export class FormOperations {
   }
 
   /**
+   * Find recent form data by time range and user list for real-time dashboard
+   */
+  static async findRecentByUsers(userIds: ObjectId[], sinceTimestamp: number): Promise<FormDataWithId[]> {
+    try {
+      const collection = await this.getCollection();
+      const docs = (await collection
+        .find({
+          clientId: { $in: userIds },
+          timestamp: { $gte: sinceTimestamp },
+        })
+        .sort({ timestamp: 1 })
+        .toArray()) as FormDataWithId[];
+      return docs.map(this.mapFromDocument);
+    } catch (error) {
+      console.error("Failed to find recent form data by users:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Find all current form data for a list of users (for real-time dashboard)
+   */
+  static async findByUsers(userIds: ObjectId[]): Promise<FormDataWithId[]> {
+    try {
+      const collection = await this.getCollection();
+      const docs = (await collection
+        .find({
+          clientId: { $in: userIds },
+        })
+        .sort({ timestamp: 1 })
+        .toArray()) as FormDataWithId[];
+      return docs.map(this.mapFromDocument);
+    } catch (error) {
+      console.error("Failed to find form data by users:", error);
+      return [];
+    }
+  }
+  /**
    * Find a form data entry by ID
    */
   static async findById(id: ObjectId | string): Promise<FormDataWithId | null> {

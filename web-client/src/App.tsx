@@ -6,12 +6,14 @@ import "./index.css";
 import {
   StateNavigationPage,
   WithStateNavigation,
+  AppState,
 } from "./providers/StateNavigationProvider";
 import BeforeConcert from "./pages/BeforeConcertPage";
 import ConcertStartPage from "./pages/ConcertStartPage";
 import OvationPage from "./pages/OvationPage";
 import RepertoireDisplayPage from "./pages/RepertoireDisplayPage";
 import PieceListeningPage from "./pages/PieceListeningPage";
+import TensionMeasurementConferencePage from "./pages/TensionMeasurementConferencePage";
 import EndOfConcertPage from "./pages/EndOfConcertPage";
 import { LoadingWithBackgroundTransition } from "./components/Loading";
 import { UserActivityTrackingProvider } from "./providers/UserActivityTrackingProvider";
@@ -61,7 +63,11 @@ export function App() {
           startBackgroundColor="#000000"
           finishBackgroundColor={
             state
-              ? getColor(config.constants.pagesBackgroundColor[state.type])
+              ? getColor(
+                  config.constants.pagesBackgroundColor[
+                    (state as unknown as AppState).type as EventType
+                  ]
+                )
               : "#000000"
           }
           shouldTransitionBegin={loadingState.shouldBeginTransition}
@@ -95,6 +101,10 @@ export function App() {
           <StateNavigationPage<EventType>
             pageState="PIECE_LISTENING"
             component={PieceListeningPage}
+          />
+          <StateNavigationPage<EventType>
+            pageState="TENSION_MEASUREMENT_CONFERENCE"
+            component={TensionMeasurementConferencePage as any}
           />
           <StateNavigationPage<EventType>
             pageState="OVATION"

@@ -38,6 +38,9 @@
             <div class="ui segment">
                 <h3 class="ui header">Komunikaty</h3>
                   <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: stretch;">
+                    <a href="<%= url.admin %>/concerts/<%= concert._id %>/dashboard" class="ui basic purple button" style="display: flex; align-items: center;">
+                      <i class="chart line icon"></i>Live Dashboard
+                    </a>
                     <a href="<%= url.admin %>/concerts/<%= concert._id %>/export-events" class="ui basic green button" download style="display: flex; align-items: center;">
                       <i class="download icon"></i>Eksportuj wydarzenia
                     </a>
